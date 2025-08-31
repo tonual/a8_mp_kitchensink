@@ -1,0 +1,7 @@
+MAIN_IMAGE RCDATA assets/bin/main_image.bin 
+FRAME0 RCDATA assets/bin/frame0.bin 
+FRAME1 RCDATA assets/bin/frame1.bin 
+FRAME2 RCDATA assets/bin/frame2.bin 
+FRAME3 RCDATA assets/bin/frame3.bin 
+FRAME4 RCDATA assets/bin/frame4.bin 
+FRAME5 RCDATA assets/bin/frame5.bin
