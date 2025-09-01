@@ -48,3 +48,87 @@ Animates at `x=64, y=40` by copying frames to screen memory (`$9000`).
 
 ### Milestone 7
 - Integration with MPT player (solving memory occupation conflicts, possible VBl issues etc)
+
+
+## Big Picure
+
+### Mission
+Allow non-technical creators to develop story-telling/multimedia-rich experience, for stock A8 XL/XE.
+
+### DDD
+Single engine with data/resources driven execution.
+
+# "Story Engine" Overview
+
+The **Story Engine** is designed to load and display interactive story pages from `.atr` disk images.  
+Each story page consists of configuration data, images, and music resources.
+
+---
+
+## Example `.atr` Image Contents
+
+- `STORY_PAGE1.DAT`  
+- `STORY_PAGE2.DAT`  
+- ...  
+- `STORY_ENGINE.XEX`  
+
+---
+
+## Story Page Structure (~40KB)
+
+Each story page includes:  
+1. **Page Configuration Data**:  
+   - Animation settings  
+   - Text sequences  
+   - Timing information  
+
+2. **Image Resource Data**:  
+   - Up to 3-5 images  
+   - Includes looped animation frames  
+
+3. **Music Resource Data**
+
+---
+
+## Engine Behavior
+
+- The engine loads `STORY_PAGE1.DAT` by default.  
+- It retrieves the configuration data and processes the slides sequentially.  
+
+---
+
+## Configuration Example
+
+### Slide 1
+
+#### Image Animation
+- **Animation Setup**: `32x16`  
+- **Frame 1**:  
+  - Position: `(56, 67)`  
+  - Delay: `200ms`  
+- **Frame 2**:  
+  - Position: `(20, 30)`  
+  - Delay: `100ms`  
+- **Frame 3**:  
+  - ...
+
+#### Text Animation
+- **Text 1**:  
+  - Content: `"Hello world"`  
+  - Delay: `2000ms`  
+- **Text 2**:  
+  - Content: `"Such a beautiful day we have!"`  
+  - Delay: `3000ms`  
+
+---
+
+### Slide 2
+- **Image Animation**: ...  
+- **Text Animation**: ...  
+
+---
+
+## Slide Progression
+
+Once all text and animations for a slide are completed, the engine automatically loads the next page:  
+`D:STORY_PAGE2.DAT`
