@@ -37,18 +37,14 @@ Animates at `x=64, y=40` by copying frames to screen memory (`$9000`).
 ### Milestone 5
 - Display list consists of:  
   - Margin.  
-  - ANTIC Mode D: Main image with animation.  
-  - Margin.  
-  - ANTIC Mode 2: 2 lines of text.
-
-### Milestone 6
-- Display list consists of:  
-  - Margin.  
   - ANTIC Mode D: Main image with animation (centered).  
   - Margin.  
   - ANTIC Mode 2: 2 lines of text.  
   - Margin.
 
-### Milestone 7
+### Milestone 6
 - Text lines with associated delay times configured in `.rc` file.
 - Text lines slideshow (main image and frame animation run independently).
+
+### Milestone 7
+- Integration with MPT player (solving memory occupation conflicts, possible VBl issues etc)
