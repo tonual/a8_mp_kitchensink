@@ -58,7 +58,7 @@ Allow non-technical creators to develop story-telling/multimedia-rich experience
 ### DDD
 Single engine with data/resources driven execution.
 
-# "Story Engine" Overview
+### "Story Engine" Overview
 
 The **Story Engine** is designed to load and display interactive story pages from `.atr` disk images.  
 Each story page consists of configuration data, images, and music resources.
