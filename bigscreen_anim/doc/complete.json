@@ -1,0 +1,61 @@
+{
+    "encoding": {
+      "pixels_per_byte": 4,
+      "bits_per_pixel": 2,
+      "pf_registers": ["PF0", "PF1", "PF2", "PF3"],
+      "main_image": [32, 96],   // [bytes_per_line, lines]
+      "frame": [8, 16]          // [bytes_per_line, lines]
+    },
+  
+    "slides": [
+      {
+        "id": 1,
+        "image_animation": {
+          "setup": [32, 16],
+          "frames": [
+            {"pos": [40, 20], "delay": 250},
+            {"pos": [42, 22], "delay": 250},
+            {"pos": [44, 24], "delay": 250}
+          ]
+        },
+        "text_animation": [
+          {"text": "The mage entered the ruins.", "delay": 2000},
+          {"text": "Shadows coiled around ancient stones.", "delay": 3000}
+        ],
+        "music": ["INTRO_THEME.MPT", true]
+      },
+      {
+        "id": 2,
+        "image_animation": {
+          "setup": [16, 32],
+          "frames": [
+            {"pos": [60, 40], "delay": 300},
+            {"pos": [62, 42], "delay": 300},
+            {"pos": [64, 44], "delay": 300}
+          ]
+        },
+        "text_animation": [
+          {"text": "He whispered forbidden words.", "delay": 2000},
+          {"text": "A gate of fire cracked open.", "delay": 2500}
+        ],
+        "music": ["RITUAL_CHANT.MPT", false]
+      },
+      {
+        "id": 3,
+        "image_animation": {
+          "setup": [32, 32],
+          "frames": [
+            {"pos": [50, 30], "delay": 400},
+            {"pos": [52, 32], "delay": 400}
+          ]
+        },
+        "text_animation": [
+          {"text": "The gate screamed open.", "delay": 2000},
+          {"text": "Something beyond stared back.", "delay": 3000},
+          {"text": "The mage’s fate was sealed.", "delay": 3500}
+        ],
+        "music": ["FINAL_CHORD.MPT", false]
+      }
+    ]
+  }
+  
