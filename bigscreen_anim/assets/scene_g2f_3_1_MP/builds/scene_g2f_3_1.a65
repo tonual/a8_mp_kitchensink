@@ -1,0 +1,763 @@
+; ------------------------------------------------------------
+; Mad Pascal Compiler version 1.7.3 [2025/07/01] for MOS 6502 CPU
+; ------------------------------------------------------------
+
+STACKWIDTH	= 16
+CODEORIGIN	= $2000
+
+TRUE		= 1
+FALSE		= 0
+EOL		= $9B
+__BUFFER	= $0400
+@BUF		= __BUFFER
+
+; ------------------------------------------------------------
+
+	org $80
+
+zpage
+
+.if .def(@vbxe_detect)
+fxptr	.ds 2						; VBXE pointer
+.fi
+
+.if .def(@AllocMem)||.def(MAIN.SYSTEM.GETMEM)||.def(MAIN.SYSTEM.FREEMEM)
+psptr	.ds 2						; PROGRAMSTACK Pointer
+.fi
+
+bp	.ds 2
+bp2	.ds 2
+bp3	= bp+1
+
+eax	.ds 4						;8 bytes (aex + edx) -> divREAL
+edx	.ds 4
+ecx	.ds 4
+
+TMP
+ztmp
+ztmp8	.ds 1
+ztmp9	.ds 1
+ztmp10	.ds 1
+ztmp11	.ds 1
+
+STACKORIGIN	.ds STACKWIDTH*4
+zpend
+
+; ------------------------------------------------------------
+
+ax	= eax
+al	= eax
+ah	= eax+1
+
+cx	= ecx
+cl	= ecx
+ch	= ecx+1
+
+dx	= edx
+dl	= edx
+dh	= edx+1
+
+	org eax
+
+FP1MAN0	.ds 1
+FP1MAN1	.ds 1
+FP1MAN2	.ds 1
+FP1MAN3	.ds 1
+
+	org edx
+
+FP2MAN0	.ds 1
+FP2MAN1	.ds 1
+FP2MAN2	.ds 1
+FP2MAN3	.ds 1
+
+	org ecx
+
+FPMAN0	.ds 1
+FPMAN1	.ds 1
+FPMAN2	.ds 1
+FPMAN3	.ds 1
+
+	org ztmp8
+
+FP1SGN	.ds 1
+FP1EXP	.ds 1
+
+	org ztmp10
+
+FP2SGN	.ds 1
+FP2EXP	.ds 1
+
+	org bp2
+
+FPSGN	.ds 1
+FPEXP	.ds 1
+
+	.ifdef MAIN.@DEFINES.BASICOFF
+	org CODEORIGIN
+	icl 'atari\basicoff.asm'
+	ini CODEORIGIN
+	.fi
+
+	.ifdef MAIN.@DEFINES.S_VBXE
+	opt h-
+	ins 'atari\s_vbxe\sdxld2.obx'
+	opt h+
+	.fi
+
+	org CODEORIGIN
+
+.local	MAIN.@RESOURCE
+.endl
+
+.local	RESOURCE
+	icl 'atari\resource.asm'
+	?EXTDETECT = 0
+	?VBXDETECT = 0
+
+	RCDATA 'scene_g2f_3_1.f00' FNT0 0 0 0 0 0 0 0 0
+	RCDATA 'scene_g2f_3_1.f01' FNT1 0 0 0 0 0 0 0 0
+	RCDATA 'scene_g2f_3_1.f02' FNT2 0 0 0 0 0 0 0 0
+	RCDATA 'scene_g2f_3_1.scr' SCR 0 0 0 0 0 0 0 0
+.endl
+
+; ------------------------------------------------------------
+
+	org CODEORIGIN
+
+	STATICDATA
+
+; ------------------------------------------------------------
+
+RTLIB
+	icl 'rtl6502_a8.asm'
+
+.print 'ZPAGE: ',zpage,'..',zpend-1
+
+.print 'RTBUF: ',@buf,'..',@buf+255
+
+.print 'RTLIB: ',RTLIB,'..',*-1
+
+; ------------------------------------------------------------
+
+START
+	tsx
+	stx MAIN.@halt+1
+
+	.ifdef MAIN.@DEFINES.ROMOFF
+	icl 'atari\romoff.asm'
+	.fi
+
+VLEN	= VARDATASIZE-VARINITSIZE
+VADR	= DATAORIGIN+VARINITSIZE
+
+	ift (VADR > $BFFF) && .not(.def MAIN.@DEFINES.ROMOFF)
+	ert 'Invalid memory address range ',VADR
+	eif
+
+	ift (VLEN > 0) && (VLEN <= 256)
+	ldx #256-VLEN
+	lda #$00
+	sta:rne VADR+VLEN-256,x+
+	eli VLEN>256
+	m@init
+	eif
+
+.ifdef psptr
+	mwa #PROGRAMSTACK psptr
+.fi
+
+	ldx #$00					; X = 0
+	stx bp						; BP = 0
+
+	stx audctl					; reset POKEY
+	stx audctl+$10
+	lda #3
+	sta skctl
+	sta skctl+$10
+
+	dex						; X = 255
+
+	UNITINITIALIZATION
+
+.local	MAIN						; PROCEDURE
+
+	jmp l_0004
+
+; ------------------------------------------------------------
+
+.local	SYSTEM						; UNIT
+
+; ------------------------------------------------------------
+; ------------------------------------------------------------
+@UnitInit
+
+; -------------------  ASM Block 00000060  -------------------
+
+	.ifdef @CmdLine
+
+	ldx #$0F
+	mva:rpl $340,x IOCB@COPY,x-
+	rts
+
+IOCB@COPY	:16 brk
+	eif
+
+
+	rts
+
+; ------------------------------------------------------------
+
+M_PI_2	= $0648
+D_PI_2	= $0192
+D_PI_180	= $04
+__PORTB_BANKS	= $0101
+MGTIA	= $00
+MVBXE	= $80
+VBXE_XDLADR	= $00
+VBXE_BCBTMP	= $E0
+VBXE_BCBADR	= $0100
+VBXE_MAPADR	= $1000
+VBXE_CHBASE	= $1000
+VBXE_OVRADR	= $5000
+VBXE_WINDOW	= $B000
+IDLI	= $00
+IVBL	= $01
+IVBLD	= $01
+IVBLI	= $02
+ITIM1	= $03
+ITIM2	= $04
+ITIM4	= $05
+CH_DELCHR	= $FE
+CH_ENTER	= $9B
+CH_ESC	= $1B
+CH_CURS_UP	= $1C
+CH_CURS_DOWN	= $1D
+CH_CURS_LEFT	= $1E
+CH_CURS_RIGHT	= $1F
+CH_TAB	= $7F
+CH_EOL	= $9B
+CH_CLR	= $7D
+CH_BELL	= $FD
+CH_DEL	= $7E
+CH_DELLINE	= $9C
+CH_INSLINE	= $9D
+PAL_PMCOLOR0	= $00
+PAL_PMCOLOR1	= $01
+PAL_PMCOLOR2	= $02
+PAL_PMCOLOR3	= $03
+PAL_COLOR0	= $04
+PAL_COLOR1	= $05
+PAL_COLOR2	= $06
+PAL_COLOR3	= $07
+PAL_COLBAK	= $08
+COLOR_BLACK	= $00
+COLOR_WHITE	= $0E
+COLOR_RED	= $32
+COLOR_CYAN	= $96
+COLOR_VIOLET	= $68
+COLOR_GREEN	= $C4
+COLOR_BLUE	= $74
+COLOR_YELLOW	= $EE
+COLOR_ORANGE	= $28
+COLOR_BROWN	= $E4
+COLOR_LIGHTRED	= $3C
+COLOR_GRAY1	= $04
+COLOR_GRAY2	= $06
+COLOR_GRAY3	= $0A
+COLOR_LIGHTGREEN	= $CC
+COLOR_LIGHTBLUE	= $7C
+FMOPENREAD	= $04
+FMOPENWRITE	= $08
+FMOPENAPPEND	= $09
+FMOPENREADWRITE	= $0C
+DATESEPARATOR	= DATAORIGIN+$0000
+RND	= $D20A
+adr.PALETTE	= $02C0
+.var PALETTE	= adr.PALETTE .word
+adr.HPALETTE	= $D012
+.var HPALETTE	= adr.HPALETTE .word
+FILEMODE	= DATAORIGIN+$0001
+GRAPHMODE	= DATAORIGIN+$0002
+IORESULT	= DATAORIGIN+$0003
+EOLN	= DATAORIGIN+$0004
+SCREENWIDTH	= DATAORIGIN+$0005
+SCREENHEIGHT	= DATAORIGIN+$0007
+adr.MEM	= $00
+.var MEM	= adr.MEM .word
+RNDSEED	= DATAORIGIN+$0009
+
+.endl							; UNIT SYSTEM
+
+; ------------------------------------------------------------
+
+.local	ATARI						; UNIT
+
+; ------------------------------------------------------------
+
+DL_BLANK1	= $00
+DL_BLANK2	= $10
+DL_BLANK3	= $20
+DL_BLANK4	= $30
+DL_BLANK5	= $40
+DL_BLANK6	= $50
+DL_BLANK7	= $60
+DL_BLANK8	= $70
+DL_DLI	= $80
+DL_LMS	= $40
+DL_VSCROLL	= $20
+DL_HSCROLL	= $10
+DL_JMP	= $01
+DL_JVB	= $41
+DL_MODE_GR15	= $0E
+DL_MODE_GR8	= $0F
+IRQENS	= $10
+RTCLOK	= $12
+RTCLOK1	= $12
+RTCLOK2	= $13
+RTCLOK3	= $14
+ATRACT	= $4D
+LMARGIN	= $52
+RMARGIN	= $53
+ROWCRS	= $54
+COLCRS	= $55
+DINDEX	= $57
+SAVMSC	= $58
+PALNTS	= $62
+RAMTOP	= $6A
+VDSLST	= $0200
+SDLSTL	= $0230
+TXTROW	= $0290
+TXTCOL	= $0291
+TINDEX	= $0293
+TXTMSC	= $0294
+SDMCTL	= $022F
+GPRIOR	= $026F
+CRSINH	= $02F0
+CHACT	= $02F3
+CHBAS	= $02F4
+CH	= $02FC
+FILDAT	= $02FD
+PCOLR0	= $02C0
+PCOLR1	= $02C1
+PCOLR2	= $02C2
+PCOLR3	= $02C3
+COLOR0	= $02C4
+COLOR1	= $02C5
+COLOR2	= $02C6
+COLOR3	= $02C7
+COLOR4	= $02C8
+COLBAKS	= $02C8
+HPOSP0	= $D000
+HPOSP1	= $D001
+HPOSP2	= $D002
+HPOSP3	= $D003
+HPOSM0	= $D004
+HPOSM1	= $D005
+HPOSM2	= $D006
+HPOSM3	= $D007
+SIZEP0	= $D008
+SIZEP1	= $D009
+SIZEP2	= $D00A
+SIZEP3	= $D00B
+SIZEM	= $D00C
+GRAFP0	= $D00D
+GRAFP1	= $D00E
+GRAFP2	= $D00F
+GRAFP3	= $D010
+GRAFM	= $D011
+P0PF	= $D004
+PAL	= $D014
+TRIG3	= $D013
+COLPM0	= $D012
+COLPM1	= $D013
+COLPM2	= $D014
+COLPM3	= $D015
+COLPF0	= $D016
+COLPF1	= $D017
+COLPF2	= $D018
+COLPF3	= $D019
+COLBAK	= $D01A
+COLBK	= $D01A
+PRIOR	= $D01B
+GRACTL	= $D01D
+PMCNTL	= $D01D
+HITCLR	= $D01E
+CONSOL	= $D01F
+AUDF1	= $D200
+AUDC1	= $D201
+AUDF2	= $D202
+AUDC2	= $D203
+AUDF3	= $D204
+AUDC3	= $D205
+AUDF4	= $D206
+AUDC4	= $D207
+AUDCTL	= $D208
+KBCODE	= $D209
+IRQEN	= $D20E
+SKSTAT	= $D20F
+PORTA	= $D300
+PORTB	= $D301
+PACTL	= $D302
+DMACTL	= $D400
+CHACTL	= $D401
+DLISTL	= $D402
+HSCROL	= $D404
+VSCROL	= $D405
+PMBASE	= $D407
+CHBASE	= $D409
+WSYNC	= $D40A
+VCOUNT	= $D40B
+PENH	= $D40C
+PENV	= $D40D
+NMIEN	= $D40E
+NMIVEC	= $FFFA
+RESETVEC	= $FFFC
+IRQVEC	= $FFFE
+
+.endl							; UNIT ATARI
+
+; ------------------------------------------------------------
+
+.local	CRT						; UNIT
+
+.local	KEYPRESSED					; FUNCTION | ASSEMBLER
+
+; -------------------  ASM Block 00000065  -------------------
+
+	ldy #$00	; false
+	lda kbcodes
+	cmp #$ff
+	seq
+	iny		; true
+	sty Result
+
+@exit
+
+; ------------------------------------------------------------
+
+RESULT	= DATAORIGIN+$000C
+
+	rts						; ret
+.endl
+
+; ------------------------------------------------------------
+
+TEXTATTR	= DATAORIGIN+$000B
+CONSOL	= $D01F
+CN_START_SELECT_OPTION	= $00
+CN_SELECT_OPTION	= $01
+CN_START_OPTION	= $02
+CN_OPTION	= $03
+CN_START_SELECT	= $04
+CN_SELECT	= $05
+CN_START	= $06
+CN_NONE	= $07
+BLACK	= $00
+WHITE	= $0F
+RED	= $26
+CYAN	= $AC
+PURPLE	= $48
+GREEN	= $B6
+BLUE	= $86
+YELLOW	= $DC
+ORANGE	= $18
+BROWN	= $F4
+LIGHT_RED	= $2A
+DARK_GREY	= $04
+GREY	= $08
+LIGHT_GREEN	= $BC
+LIGHT_BLUE	= $9A
+LIGHT_GREY	= $0C
+BW40	= $00
+CO40	= $01
+BW80	= $02
+CO80	= $03
+MONO	= $07
+C40	= $01
+C80	= $03
+BLINK	= $80
+
+.endl							; UNIT CRT
+
+.local	VBL						; PROCEDURE | ASSEMBLER | INTERRUPT
+
+; -------------------  ASM Block 00000072  -------------------
+
+
+	mva #1 dli.cnt
+
+	mva adr.fntTable chbase
+	mva adr.fntTable+1 dli.chbs
+
+	mva adr.c0Table color0
+	mva adr.c0Table+1 dli.col0
+	mva adr.c1Table color1
+	mva adr.c1Table+1 dli.col1
+	mva adr.c2Table color2
+	mva adr.c2Table+1 dli.col2
+	mva adr.c3Table color3
+	mva adr.c3Table+1 dli.col3
+
+	mva #$92 colbak
+
+	jmp xitvbv
+
+	rti						; ret
+.endl
+
+.local	DLI						; PROCEDURE | ASSEMBLER | INTERRUPT
+
+; -------------------  ASM Block 00000073  -------------------
+
+
+	sta rA
+	stx rX
+	sty rY
+
+	lda #0
+chbs	equ *-1
+
+	ldx #0
+col0	equ *-1
+
+	ldy #0
+col1	equ *-1
+
+	;sta wsync
+
+	sta chbase
+	lda #0
+col2	equ *-1
+	stx color0
+	ldx #0
+col3	equ *-1
+	sty color1
+	sta color2
+	stx color3
+
+	inc cnt
+
+	ldx #0
+cnt	equ *-1
+
+	lda adr.fntTable,x
+	sta chbs
+
+	lda adr.c0Table,x
+	sta col0
+
+	lda adr.c1Table,x
+	sta col1
+
+	lda adr.c2Table,x
+	sta col2
+
+	lda adr.c3Table,x
+	sta col3
+
+	lda #0
+rA	equ *-1
+	ldx #0
+rX	equ *-1
+	ldy #0
+rY	equ *-1
+
+	rti						; ret
+.endl
+l_0004
+
+	lda VVBLKD
+	sta OLD_VBL
+	lda VVBLKD+1
+	sta OLD_VBL+1
+
+	lda VDSLST
+	sta OLD_DLI
+	lda VDSLST+1
+	sta OLD_DLI+1
+
+; optimize OK (P:\_IDEAS_\_GITsources_\Tonual\a8_mp_kitchensink\bigscreen_anim\assets\scene_g2f_3_1_MP\scene_g2f_3_1.pas), line = 151
+
+	lda #$3D
+	sta ATARI.SDMCTL
+
+; optimize OK (P:\_IDEAS_\_GITsources_\Tonual\a8_mp_kitchensink\bigscreen_anim\assets\scene_g2f_3_1_MP\scene_g2f_3_1.pas), line = 152
+
+	lda #$00
+	sta ATARI.SDLSTL
+	lda #$20
+	sta ATARI.SDLSTL+1
+
+; optimize OK (P:\_IDEAS_\_GITsources_\Tonual\a8_mp_kitchensink\bigscreen_anim\assets\scene_g2f_3_1_MP\scene_g2f_3_1.pas), line = 154
+
+	lda <VBL
+	ldy #5
+	sta wsync
+	dey
+	rne
+	sta VVBLKD
+	lda >VBL
+	sta VVBLKD+1
+
+; optimize OK (P:\_IDEAS_\_GITsources_\Tonual\a8_mp_kitchensink\bigscreen_anim\assets\scene_g2f_3_1_MP\scene_g2f_3_1.pas), line = 155
+
+	mva <DLI VDSLST
+	mva >DLI VDSLST+1
+
+; optimize OK (P:\_IDEAS_\_GITsources_\Tonual\a8_mp_kitchensink\bigscreen_anim\assets\scene_g2f_3_1_MP\scene_g2f_3_1.pas), line = 157
+
+	lda #$C0
+	sta ATARI.NMIEN
+
+; --- RepeatUntilProlog
+l_0090
+
+; optimize FAIL ('CRT.KEYPRESSED', P:\_IDEAS_\_GITsources_\Tonual\a8_mp_kitchensink\bigscreen_anim\assets\scene_g2f_3_1_MP\scene_g2f_3_1.pas), line = 160
+
+	jsr CRT.KEYPRESSED
+	lda CRT.KEYPRESSED.RESULT
+	jeq l_0090
+
+; optimize OK (P:\_IDEAS_\_GITsources_\Tonual\a8_mp_kitchensink\bigscreen_anim\assets\scene_g2f_3_1_MP\scene_g2f_3_1.pas), line = 162
+
+	lda OLD_VBL
+	ldy #5
+	sta wsync
+	dey
+	rne
+	sta VVBLKD
+	lda OLD_VBL+1
+	sta VVBLKD+1
+
+; optimize OK (P:\_IDEAS_\_GITsources_\Tonual\a8_mp_kitchensink\bigscreen_anim\assets\scene_g2f_3_1_MP\scene_g2f_3_1.pas), line = 163
+
+	mva OLD_DLI VDSLST
+	mva OLD_DLI+1 VDSLST+1
+
+; ------------------------------------------------------------
+
+SCR	= $AA00
+FNT0	= $B000
+FNT1	= $B400
+FNT2	= $B800
+FNT10	= $B000
+adr.DLIST	= CODEORIGIN+$0000
+.var DLIST	= adr.DLIST .word
+adr.FNTTABLE	= CODEORIGIN+$0014
+.var FNTTABLE	= adr.FNTTABLE .word
+adr.C0TABLE	= CODEORIGIN+$0032
+.var C0TABLE	= adr.C0TABLE .word
+adr.C1TABLE	= CODEORIGIN+$0050
+.var C1TABLE	= adr.C1TABLE .word
+adr.C2TABLE	= CODEORIGIN+$006E
+.var C2TABLE	= adr.C2TABLE .word
+adr.C3TABLE	= CODEORIGIN+$008C
+.var C3TABLE	= adr.C3TABLE .word
+OLD_DLI	= DATAORIGIN+$000D
+OLD_VBL	= DATAORIGIN+$000F
+@exit
+
+@halt	ldx #$00
+	txs
+
+	.ifdef MAIN.@DEFINES.ROMOFF
+	inc portb
+	.fi
+
+	ldy #$01
+
+	rts
+
+; ------------------------------------------------------------
+
+.local	@DEFINES
+ATARI
+CPU_6502
+.endl
+
+.local	@RESOURCE
+.endl
+
+.endl							; MAIN
+
+; ------------------------------------------------------------
+; ------------------------------------------------------------
+
+.macro	UNITINITIALIZATION
+
+	.ifdef MAIN.SYSTEM.@UnitInit
+	jsr MAIN.SYSTEM.@UnitInit
+	.fi
+
+	.ifdef MAIN.ATARI.@UnitInit
+	jsr MAIN.ATARI.@UnitInit
+	.fi
+
+	.ifdef MAIN.CRT.@UnitInit
+	jsr MAIN.CRT.@UnitInit
+	.fi
+.endm
+
+; ------------------------------------------------------------
+
+	ift .SIZEOF(MAIN.SYSTEM) > 0
+	.print 'SYSTEM: ',MAIN.SYSTEM,'..',MAIN.SYSTEM+.SIZEOF(MAIN.SYSTEM)-1
+	eif
+
+	ift .SIZEOF(MAIN.ATARI) > 0
+	.print 'ATARI: ',MAIN.ATARI,'..',MAIN.ATARI+.SIZEOF(MAIN.ATARI)-1
+	eif
+
+	ift .SIZEOF(MAIN.CRT) > 0
+	.print 'CRT: ',MAIN.CRT,'..',MAIN.CRT+.SIZEOF(MAIN.CRT)-1
+	eif
+
+.nowarn	.print 'CODE: ',CODEORIGIN,'..',MAIN.@RESOURCE-1
+
+	ift .SIZEOF(MAIN.@RESOURCE)>0
+.nowarn	.print 'RESOURCE: ',MAIN.@RESOURCE,'..',MAIN.@RESOURCE+.SIZEOF(MAIN.@RESOURCE)-1
+	eif
+
+@end
+
+.nowarn	.print 'VARS: ',MAIN.@RESOURCE+.SIZEOF(MAIN.@RESOURCE),'..',@end-1
+
+; ------------------------------------------------------------
+
+	?adr = *
+	ift (?adr < ?old_adr) && (?old_adr - ?adr < $120)
+	?adr = ?old_adr
+	eif
+
+	org ?adr
+	?old_adr = *
+
+DATAORIGIN
+.by  $2D $0C $00 $00 $00 $28 $00 $18
+
+VARINITSIZE	= *-DATAORIGIN
+VARDATASIZE	= 17
+
+PROGRAMSTACK	= DATAORIGIN+VARDATASIZE
+
+	.print 'DATA: ',DATAORIGIN,'..',PROGRAMSTACK
+
+	ert DATAORIGIN<@end,'DATA memory overlap'
+
+	run START
+
+; ------------------------------------------------------------
+
+.macro	STATICDATA
+.by  $70 $70 $70 $C5 $00 $AA $85 $85  $85 $85 $85 $85 $85 $85 $85 $85  $85 $41 $00 $20 $B0 $B0 $B0 $B0
+.by  $B0 $B4 $B4 $B4 $B4 $B0 $B0 $B0  $B0 $B0 $B0 $B0 $B0 $B0 $B0 $B0  $B0 $B0 $B0 $B0 $B0 $B0 $B0 $B0
+.by  $B0 $B0 $94 $94 $94 $94 $94 $94  $94 $94 $94 $94 $94 $94 $94 $94  $94 $94 $94 $94 $94 $94 $94 $94
+.by  $94 $94 $94 $94 $94 $94 $94 $94  $06 $06 $06 $06 $06 $06 $06 $06  $06 $06 $06 $06 $06 $06 $06 $06
+.by  $06 $06 $06 $06 $06 $06 $06 $06  $06 $06 $06 $06 $06 $06 $D4 $D4  $D4 $D4 $D4 $D4 $D4 $D4 $D4 $D4
+.by  $D4 $D4 $D4 $D4 $D4 $D4 $D4 $D4  $D4 $D4 $D4 $D4 $D4 $D4 $D4 $D4  $D4 $D4 $D4 $D4 $0E $0E $0E $0E
+.by  $0E $0E $0E $0E $0E $0E $0E $0E  $0E $0E $0E $0E $0E $0E $0E $0E  $0E $0E $0E $0E $0E $0E $0E $0E
+.by  $0E $0E
+.endm
+
+	end
