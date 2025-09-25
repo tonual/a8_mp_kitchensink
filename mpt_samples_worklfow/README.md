@@ -20,15 +20,15 @@ Do dzieła!
 Połączenie syntetycznego POKEY z brzmieniem sampli wzbogaca muzykę Atari o nową jakość.
 Samplowane zestawy perkusyjne, nuty basu z filtrem dolnoprzustowym, akordy, czy krótkie
 fragmenty muzyczne (loopy) gotowe do odtwarzania w "pętli" eksponują 
-muzyczne ambicji Atari na nowy poziom. 
+muzyczne ambicje Atari na nowy poziom. 
 
-### Jak to wógle brzmi?
+### Ale jak to wógle brzmi?
 Trudno o tym pisać.. po prostu odpal [przykładowy utwór (.xex)](https://github.com/tonual/a8_mp_kitchensink/tree/main/mpt_samples_worklfow/xex) 
 na swoim Atari i posłuchaj.
 
-## Gramy na samplach
+## Zrób to sam
 
-### Przygotuj Software 
+### Wymagany Software 
 
 #### Emulator Atari
 Szkoda zużywać klawiatury wiekowego staruszka... wykorzystaj emulator do pracy. Na deser zawsze 
@@ -75,15 +75,64 @@ Pozwala min. wylistować zawartość dyskietki, dodać plik, usunąć plik.
 [Pobierz atr](https://github.com/jhallen/atari-tools)
 
 
-## Plan działania
-### Przygotowanie sampli dla MPT
-1. Pozyskanie dobrej jakości sampli 
-2. Normalizacja, dynamika i kompresja dźwięku
-2. Przycięcie, zastosowanie "fade in/out" na początek/koniec.
-3. Konwersja do mono, próbkowania w dół - 15Khz lub 8Khz 
-4.
+### 1. Przygotowanie sampli
 
-## 2. Matariały uzupełniające
+#### Pozyskaj sample
+
+Pobierz [darmowe sample](https://www.bluezone-corporation.com/images/FREE_SOUNDS/Bluezone_Corporation_Free_Chillout_Sample_Pack.zip), 
+rozpakuj pliki i otwórz konkretnie plik __Bluezone-Ambr-drum-loop-005-110.wav__ w Audacity
+
+#### Obróbka 
+Odsłuchaj, to sewkencja perkusyjna z *base drum*, *snare*, *hihat* itd. Wedle uznanie zaznacz markerami interesujące fragmenty 
+- kliknij na pozycję aby umieścić kursor a następnice __CTRL + B__. 
+Pomozniczno powiększaj/oddalaj - __CTRL + scroll myszy__.
+
+`
+Idealnie kiedy fragment zaczyna się i kończy w miejscu gdzie amplitude jest zerowa.
+Należy postarać się, aby fragment był jak najkrótszy a jednocześnie zachował sens w brzmieniu.
+Dlatego warto zrobić wygaszenie lub wejście sygnału na ambplitudę ręcznie.
+`
+- Zaznacz myszą krótki fragment w miejscu początkowego markera i zastosuj __Effects -> Fading -> Fade in__
+- Zaznacz myszą krótki fragment przed końcowym markerem i zastosuj __Effects -> Fading -> Fade out__
+`
+
+<img src="screenshots/markers.png" width=400>
+
+#### Przetwarzanie
+- zaznacza cały obszar: __CTRL + A__
+- _menu: Effect -> Volume and Compression -> Compresor_ | ustaw: *Threshold -20dB, Ratio 10:1* | Apply
+- _menu: Tracks -> Mix -> Mix Stereo Down to Mono_
+- _menu: Tracks -> Resample_ | wpisz 15000 | OK
+- _menu: Effect -> Volume and Compression -> Normalize_ | ustaw: 0dB | Apply
+- _menu: File -> Export -> Export Mulitple_ | ustaw: format WAV, enconding: Unsigned 8-bit PCM | Export
+
+Ostatnie polecenie zapisuje pociąte fragmenty do osobnych plików .wav.
+Przesłuchaj dźwięki, usuń pliki z odkrawkami.
+
+### 2. Konwersja sampli do formatów MPT
+
+Wybierz środowisko uruchomieniowe dla konwertera. Do wyboru Pyhton, .NET lub Java.
+[wav2digi](https://github.com/tonual/a8_mp_kitchensink/tree/main/mpt_samples_worklfow/utils)  
+Wyselekcjonowane pliki .wav z samplami przygotowane w poprzednim kroku, powinny znajdować się w dedykowanym __katalogu__
+
+```
+wav2digi katalog_z_wav nazwapliku.d15
+```
+Rozszerzenie .d15 stosujemu kiedy sample mają 15Khz, .d8 kiedy 8Khz.
+Istnieje eksperymentalna możliwość podania adresu pamięci do załadowania sampli.
+
+Objaśnienie formatu linii poleceń.
+```
+usage: wav2digi.py [-h] [--start-addr START_ADDR] input_paths [input_paths ...] output_file
+```
+
+`
+Rozmiar danych pojedyńczego sampla powinien być wielkrotnością liczby 256. Jeśli nie wypełnia tego obszaru, 
+zostanie zastosowany jest "pusty wypełniacz". Dlatego przełącz Audacity w jednostkę miary czasu "samples"
+i sprawdź, czy długość sampla spełnia to wymaganie. Dzięki temu wywalczysz dodatkowe miejsce na sample!.
+`
+
+## Matariały uzupełniające
 
 ### Źródła dobrej jakości sampli.
 
@@ -100,11 +149,3 @@ liczne narzędzia do tzw "masteringu" czy modyfikacji brzmienia.
 Istniej przystępna, podstawowa wersja - Ablteon Live Lite (klucz można nabyć za symboliczną kwotę)
 
 [Ableteon Live Lite](https://www.ableton.com/en/products/live-lite/)
-
-<img src="screenshots/ableton_daw.png" alt="Image description" width="500"> 
-
-## Section 2
-Describe the second major section here.
-
-## Conclusion
-Summarize the document and provide any final thoughts.
