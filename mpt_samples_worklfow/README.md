@@ -18,7 +18,7 @@ Do dzieła!
 
 ## POKEY + Sample = ♥
 Połączenie syntetycznego POKEY z brzmieniem sampli wzbogaca muzykę Atari o nową jakość.
-Samplowane zestawy perkusyjne, nuty basu z filtrem dolnoprzustowym, akordy, cz krótkie
+Samplowane zestawy perkusyjne, nuty basu z filtrem dolnoprzustowym, akordy, czy krótkie
 fragmenty muzyczne (loopy) gotowe do odtwarzania w "pętli" - to możliwości wyniesienia brzmienia
 Atari na nowy poziom. 
 
