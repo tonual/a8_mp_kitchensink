@@ -4,6 +4,22 @@ import subprocess
 import tempfile
 import glob
 
+#Processing steps:
+#1. Parse Args & Config: Read inputs, output file, start addr ($9000 default). Infer sample rate from ext (.d8=8kHz, .d15=15kHz). Validate or error.
+#2. Collect WAVs: Scan paths for .wav files (files or dirs), sort, list valid ones. Skip non-WAVs.
+#3. Init Structures: Prep lists for addresses, lengths, data buffer. Set current addr to start_addr.
+#4 .Process Each WAV:
+
+#4a: SoX convert to 8-bit mono raw PCM at target rate (temp file).
+#4b: Read raw, scale to 4-bit (0-15).
+#4c: Pack pairs into bytes ((high<<4)|low); pad odd with 0.
+#4d: Pad to 256-byte multiple with 0x88 (silence).
+#4e: Record addr/len, append to buffer, advance addr.
+
+#5 .Build Table: 32-byte array: bytes 0-15 = start high-bytes (up to 16 samples); 16-31 = end high-bytes.
+#6 .Write Output: Table + packed data to file. Print summary (samples, addrs, lens, size).
+#7 .Cleanup: Delete temps, handle errors.
+
 def run_sox_command(input_file, output_file, sample_rate=8000):
     """Run SoX to convert input audio to 8-bit unsigned PCM raw file."""
     try:
