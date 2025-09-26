@@ -1,25 +1,36 @@
 # Muzyka na samplach
 
-## Spis treści
+# Spis treści
+
 - [Wstęp](#wstęp)
-  - [POKEY + Sample = ♥](#pokey--sample--)
+  - [POKEY + Sample = ♥](#pokey--sample-)
   - [Ale jak to brzmi?](#ale-jak-to-brzmi)
 - [Zrób to sam](#zrób-to-sam)
   - [Najpierw Software](#najpierw-software)
     - [Emulator Atari](#emulator-atari)
-    - [Music Pro Tracker v24](#music-pro-tracker-v24)
+    - [Music Pro Tracker v2.4](#music-pro-tracker-v24)
     - [Audacity](#audacity)
     - [Sox](#sox)
     - [wav2digi](#wav2digi)
     - [atr](#atr)
-  - [Przygotowanie sampli](#1-przygotowanie-sampli)
+    - [Free Pascal, Mad Assembler, Mad Pascal](#free-pascal-mad-assembler-mad-pascal)
+  - [Przygotowanie sampli](#przygotowanie-sampli)
     - [Pozyskaj sample](#pozyskaj-sample)
     - [Obróbka](#obróbka)
-    - [Przetwarzanie](#przetwarzanie)
-  - [Konwersja formatów MPT](#2-konwersja-sampli-do-formatów-mpt)
-- [Materiały uzupełniające](#matariały-uzupełniające)
-  - [Źródła dobrej jakości sampli](#źródła-dobrej-jakości-sampli)
-  - [PC DAW](#pc-daw)
+    - [Obowiązkowe przetwarzanie](#obowiązkowe-przetwarzanie)
+  - [Konwersja formatów MPT](#konwersja-formatów-mpt)
+    - [Linia poleceń](#linia-poleceń)
+    - [Omówienie statystyk](#omówienie-statystyk)
+  - [Obraz dyskietki](#obraz-dyskietki)
+  - [Praca z MPT na emulatorze](#praca-z-mpt-na-emulatrze)
+  - [Ładowanie sampli w MPT](#ładowanie-sampli-w-mpt)
+  - [Zagrajmy samplami](#zagrajmy-samplami)
+  - [Dla kozery, dodajmy basik](#dla-kozery-dodajmy-basik)
+  - [Zapisujemy utwór i wyciągamy z obrazu .atr](#zapisujemy-utwór-i-wyciągamy-z-obrazu-atr)
+  - [Tworzymy plik uruchamialny .xex](#tworzymy-plik-uruchamialny-xex)
+- [Źródła dobrej jakości sampli](#źródła-dobrej-jakości-sampli)
+- [PC DAW](#pc-daw)
+
 
 ---
 
