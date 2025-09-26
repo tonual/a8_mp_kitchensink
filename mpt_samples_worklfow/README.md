@@ -1,9 +1,6 @@
 # Muzyka na samplach
 
 ## Spis treści
-# Muzyka na samplach
-
-## Spis treści
 - [Wstęp](#wstęp)
   - [POKEY + Sample = ♥](#pokey--sample--)
   - [Ale jak to brzmi?](#ale-jak-to-brzmi)
@@ -27,26 +24,7 @@
 ---
 
 ## Wstęp
-To jest przewodnik "po sznurku" - przez kwestie przygotowania sampli, konwersjii formatów, programowania muzyki   
-po kompilację i uruchomienie na standardowym Atari XL/XE. Znajdziesz tu konkretne instrukcje, narzędzia, działające przykłady,  
-kasusy użycia i próbki. Do dzieła!
-
-### POKEY + Sample = ♥
-Połączenie syntetycznego POKEY z brzmieniem sampli wzbogaca muzykę Atari o nową jakość. Samplowane zestawy perkusyjne,   
-nuty basu z filtrem dolnoprzustowym, akordy, czy krótkie
-fragmenty muzyczne (loopy) gotowe do odtwarzania w "pętli" eksponują 
-muzyczne ambicje Atari na nowy poziom. 
-
-### Ale jak to brzmi?
-Trudno o tym pisać.. po prostu odpal [przykładowy utwór (.xex)](https://github.com/tonual/a8_mp_kitchensink/tree/main/mpt_samples_worklfow/xex) 
-na swoim Atari i posłuchaj.  
-Muzyczkę _transcil.xex_ wykonasz samodzilenie na podstawie tego przewodnika!
-
-
----
-
-## Wstęp
-To jest przewodnik "po sznurku" - przez kwestie przygotowania sampli, konwersjii formatów, programowania muzyki   
+To jest przewodnik "po sznurku" - od kwestii przygotowania sampla, konwersjii formatów, programowania muzyki   
 po kompilację i uruchomienie na standardowym Atari XL/XE. Znajdziesz tu konkretne instrukcje, narzędzia, działające przykłady,  
 kasusy użycia i próbki. Do dzieła!
 
@@ -72,19 +50,21 @@ można sprawdzić efekt na prawdziwym sprzęcie.
 - [Atari800](https://github.com/atari800/atari800)
 
 #### Music Pro Tracker v2.4
-[MPT ](http://atariki.krap.pl/index.php/Music_Protracker) jest doskonałym trackerem do pracy z samplami na Atari XL/XE zwłaszcza,   
-z uwagi na dostępny odtwarzacz zarówno wersji na Assemlber jak i __Mad Pascal__.
+MPT jest doskonałym _trackerem_ autorstwa Adama Bieniasa. Program powstał na początku złotych lat 90tych.  
+Tracker wspiera pracę z samplami na podstawowym Atari XL/XE. Format pliku z muzyką to .md1 (.md2),  
+natomiast sample przechowywane są w osobnym pliku (.d8, .d15). Warto zwrócić uwagę na dostępne, kompaktowe   
+odtwarzacze muzyki z formatu .md1 zarówno wersji Assemlber jak i __Mad Pascal__ ze wsparciem sampli(!)
 
 Kilka faktów:
 - 1 kanał przeznaczony na granie samplami
 - max 16 różnych sampli
-- częstotliwość próbkowania to 15Khz lub 8Khz, w rozdzielczości 4bit, mono
-- max rozmiar sampli ~11Kb (według mojego doświadczenia)
-- max czas sampla 3.4s (według mojego doświadczenia)
+- częstotliwość próbkowania: 15Khz lub 8Khz, 4bit, mono
+- max rozmiar sampli ~11Kb _(według mojego doświadczenia)_
+- max czas sampla 3.4s _(według mojego doświadczenia)_
 - możliowść załadowania wielu sampli jednocześnie z jednego pliku
 - format pliku sampli: .d8 (8KHz), .d15 (15Khz)
 
-[Pobierz MPT obraz dyskietki](http://atariki.krap.pl/images/4/4b/Mpt24s_and_docs.ATR)
+[Więcej faktów o MPT](http://atariki.krap.pl/index.php/Music_Protracker) 
 
 #### Audacity
 Darmowy, wieloplatformowy (Win, OSX, Linux) program do pracy z samplami - posiada komplet narzędzi wymaganych na potrzeby  
@@ -108,12 +88,18 @@ Kluczowymi informacjami o wymaganiach podzielił się @tebe [w dyskusji na forum
 
 #### atr
 Program linii poleceń do manipulacji obrazami dyskietki Atari czyli plikami .atr
-Pozwala min. wylistować zawartość dyskietki, dodać plik, usunąć plik.
+Pozwala min. wylistować zawartość dyskietki, dodać plik, usunąć plik.  
+Podaję link to kodu źródłowego, zatem należ samodzielnie skompilować program dla swojego systemu.  
+Wystraczy zainstalować kompilator języka C, i uruchomić z linii poleceń:
+```
+gcc atr.c
+```
 
-[Pobierz atr](https://github.com/jhallen/atari-tools)
+[Pobierz atr](https://github.com/jhallen/atari-tools/archive/refs/heads/master.zip)  
+[Dokumentacja](https://github.com/jhallen/atari-tools)
 
+### Przygotowanie sampli
 
-### 1. Przygotowanie sampli
 
 #### Pozyskaj sample
 
@@ -121,7 +107,7 @@ Pobierz [darmowe sample](https://www.bluezone-corporation.com/images/FREE_SOUNDS
 rozpakuj pliki i otwórz konkretnie plik __Bluezone-Ambr-drum-loop-005-110.wav__ w Audacity
 
 #### Obróbka 
-Odsłuchaj, to sewkencja perkusyjna z *base drum*, *snare*, *hihat* itd. Wedle uznanie zaznacz markerami interesujące fragmenty 
+Odsłuchaj, to sewkencja perkusyjna z *base drum*, *snare*, *hihat* itd. Zaznacz markerami interesujące fragmenty 
 - kliknij na pozycję aby umieścić kursor a następnice __CTRL + B__. 
 Pomozniczno powiększaj/oddalaj - __CTRL + scroll myszy__.
 
@@ -136,7 +122,6 @@ Dlatego warto zrobić wygaszenie lub wejście sygnału na ambplitudę ręcznie.
 - Zaznacz myszą krótki fragment przed końcowym markerem i zastosuj __Effects -> Fading -> Fade out__  
 
 
-
 #### Przetwarzanie
 - zaznacza cały obszar: __CTRL + A__
 - _menu: Effect -> Volume and Compression -> Compresor_ | ustaw: *Threshold -20dB, Ratio 10:1* | Apply
@@ -146,30 +131,70 @@ Dlatego warto zrobić wygaszenie lub wejście sygnału na ambplitudę ręcznie.
 - _menu: File -> Export -> Export Mulitple_ | ustaw: format WAV, enconding: Unsigned 8-bit PCM | Export
 
 Ostatnie polecenie zapisuje pociąte fragmenty do osobnych plików .wav.
-Przesłuchaj dźwięki, usuń pliki z odkrawkami.
+Przesłuchaj te pliki, usuń niepotrzbne "pliki-odkrawki".
 
-### 2. Konwersja sampli do formatów MPT
 
-Wybierz środowisko uruchomieniowe dla konwertera. Do wyboru Pyhton, .NET lub Java.
-[wav2digi](https://github.com/tonual/a8_mp_kitchensink/tree/main/mpt_samples_worklfow/utils)  
-Wyselekcjonowane pliki .wav z samplami przygotowane w poprzednim kroku , powinny znajdować się w dedykowanym __katalogu__
+### Konwersja sampli do formatów MPT
+
+Gwóźdź programu. Zachowaj ostrożność. Wybierz środowisko uruchomieniowe do wyboru __Pyhton, .NET lub Java__ [wav2digi](https://github.com/tonual/a8_mp_kitchensink/tree/main/mpt_samples_worklfow/utils)  
+Wyselekcjonowane pliki .wav z samplami przygotowane w poprzednim kroku , powinny znajdować się w dedykowanym __katalogu_z_wav__  
 
 ```
-wav2digi katalog_z_wav nazwapliku.d15
+wav2digi katalog_z_wav mojesample.d15
 ```
-Rozszerzenie .d15 stosujemu kiedy sample mają 15Khz, .d8 kiedy 8Khz.  
+Rozszerzenie .d15 stosujemu kiedy sample mają 15Khz, .d8 kiedy 8Khz. 
 Istnieje eksperymentalna możliwość podania adresu pamięci do załadowania sampli.
 
-Objaśnienie formatu linii poleceń.
+Pełny format linii poleceń to:
 ```
-usage: wav2digi.py [-h] [--start-addr START_ADDR] input_paths [input_paths ...] output_file
+wav2digi.py [-h] [--start-addr START_ADDR] input_paths [input_paths ...] output_file
 ```
+Przykładowe działanie; w moim przypadku python, a katalogu __sample umieszczone w sample/bluezone_drum__ (również do pobrania)  
+```
+python3 utils/wav2digi.py sample/bluezone_drum bluezone.d15
+Found 5 WAV files to process:
+  - sample/bluezone_drum/Bluezone-Ambr-drum-loop-005-110-02.wav
+  - sample/bluezone_drum/Bluezone-Ambr-drum-loop-005-110-03.wav
+  - sample/bluezone_drum/Bluezone-Ambr-drum-loop-005-110-04.wav
+  - sample/bluezone_drum/Bluezone-Ambr-drum-loop-005-110-06.wav
+  - sample/bluezone_drum/Bluezone-Ambr-drum-loop-005-110-07.wav
+Processed sample/bluezone_drum/Bluezone-Ambr-drum-loop-005-110-02.wav: 4250 4-bit samples (packed to 2304 bytes, padded by 179 bytes)
+Processed sample/bluezone_drum/Bluezone-Ambr-drum-loop-005-110-03.wav: 3894 4-bit samples (packed to 2048 bytes, padded by 101 bytes)
+Processed sample/bluezone_drum/Bluezone-Ambr-drum-loop-005-110-04.wav: 3842 4-bit samples (packed to 2048 bytes, padded by 127 bytes)
+Processed sample/bluezone_drum/Bluezone-Ambr-drum-loop-005-110-06.wav: 4160 4-bit samples (packed to 2304 bytes, padded by 224 bytes)
+Processed sample/bluezone_drum/Bluezone-Ambr-drum-loop-005-110-07.wav: 4116 4-bit samples (packed to 2304 bytes, padded by 246 bytes)
+Created bluezone.d15 with 5 samples.
+Sample addresses: ['$9000', '$9900', '$a100', '$a900', '$b200']
+Sample lengths: ['2304 bytes', '2048 bytes', '2048 bytes', '2304 bytes', '2304 bytes']
+Total file size: 11040 bytes
+zzz
 
 ```
-Rozmiar danych pojedyńczego sampla powinien być wielkrotnością liczby 256. Jeśli nie wypełnia tego obszaru, 
-zostanie zastosowany "pusty dopełniacz". Dlatego przełącz Audacity w jednostkę miary czasu "samples"
-i sprawdź, czy długość sampla spełnia to wymaganie. Dzięki temu wywalczysz dodatkowe miejsce na sample!.
+Rozmiar danych pojedyńczego sampla powinien być wielkrotnością liczby 256, a jeśli nie wypełnia tego obszaru,   
+zastosowany będzie "pusty dopełniacz". Dlatego przełącz Audacity w jednostkę miary czasu "samples"
+i sprawdź, czy długość sampla spełnia to wymaganie. Dzięki temu wywalczysz dodatkowe miejsce na dane.
 ```
+
+### Obraz dyskietki
+
+W tym kroku stworzymy obraz dyskieti Atari z samplami (plik .d15), programem MPT oraz DOSem.  
+Ponieważ sample będą ładowane z poziomu programu MPT, DOSa jest niezbędny i będzie wspierał operacji odczytu/zapisu na dyskietce.
+
+Pobież [gotowy obrazu dyskieti .atr](https://github.com/tonual/a8_mp_kitchensink/blob/main/mpt_samples_worklfow/atr/dos_mpt.atr), który ma już DOSa i MPT. Wystarczy zatem wrzucić pliki sampli.  
+Wcześniej krótka rozgrzewka - wylistuj pliki w obrazie:
+```
+atr dos_mpt.atr ls
+```
+W wyniku polecenia dostajesz listę plików w obrazie: _mpt211.com mpt24.com mpt24s.com_  (3 różne wersje programu MPT)  
+Dodajmy plik z samplami do obrazu:
+```
+atr dos_mpt.atr put
+```
+
+
+
+
+
 
 ## Matariały uzupełniające
 
@@ -182,9 +207,10 @@ i sprawdź, czy długość sampla spełnia to wymaganie. Dzięki temu wywalczysz
 
 ### PC DAW
 
-Gorąco polecam do wypróbowania pakietu Digital Audio Workstation w postaci programu Ableton.
-Zestaw obok bogatej biblioteki sampli wszelakiej maści a zwłaszcza perkusji, oraz "loopów" - posiada
-liczne narzędzia do tzw "masteringu" czy modyfikacji brzmienia. 
+Gorąco polecam pakiet _Digital Audio Workstation_ w postaci programu Ableton.  
+Zestaw, obok bogatej biblioteki sampli wszelakiej maści a zwłaszcza perkusji, oraz "loopów"   
+Posiada liczne narzędzia do tzw "masteringu" i wszelakiej maści modyfikacji brzmienia.   
+Jest sprytny, prosty w obłsudze a jednocześnie zaawansowany i posiada jedynie 2 widoki: aranżacji i kompozycji.  
 Istniej przystępna, podstawowa wersja - Ablteon Live Lite (klucz można nabyć za symboliczną kwotę)
 
 [Ableteon Live Lite](https://www.ableton.com/en/products/live-lite/)
