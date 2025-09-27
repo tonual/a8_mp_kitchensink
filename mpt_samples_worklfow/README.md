@@ -389,14 +389,18 @@ atr dos_mpt.atr get bluezone.md1
 ```
 ### Tworzymy plik uruchamialny .xex
 
-No i mamy muzyczkę na samplach, ale fajnie by było bezpośrednio odtworzyć ją na Atari/emulatrze,  
-bez potrzeby korzystania z programu MPT. 
+#### Zanim ruszysz dalej
 
-Nie chcę zapeszać, taka muzyczka doskonale nadaje się na planszę tytułową gry itd.  
-Player muzyczek .md1 na samplach (1 kanał) korzysta z przerywania VBLANK i pożera więkość (wszystkie?) cykle CPU.  
-No..ba ambitny twórca na pewno wykrzesze jakieś resztki.. ;)
+No i mamy muzyczkę na samplach o dobrze będzie móc ją odtworzyć ją na Atari/emulatrze,  
+bez potrzeby korzystania z programu MPT. Taka muzyczka doskonale nada się np. do planszy tytułowej gry.  
+Na więcej może nie starczyć cykli CPU, ponieważ player md1 na samplach (1 kanał) korzysta z przerywania VBLANK  
+i pożera ich większość (wszystkie cykle?).  
 
-## 
+#### .xex i Mad assemlber
+
+
+
+## Dodatkowe informacje
 
 ### Źródła dobrej jakości sampli.
 
