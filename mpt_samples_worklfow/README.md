@@ -9,8 +9,7 @@
   - [Najpierw Software](#najpierw-software)
     - [Emulator Atari](#emulator-atari)
     - [Music Pro Tracker v2.4](#music-pro-tracker-v24)
-    - [Audacity](#audacity)
-    - [Sox](#sox)
+    - [Audacity](#audacity)    
     - [wav2digi](#wav2digi)
     - [atr](#atr)
     - [Free Pascal, Mad Assembler, Mad Pascal](#free-pascal-mad-assembler-mad-pascal)
@@ -82,19 +81,12 @@ pocesu obróbki i przygotowania sampli da dalszej pracy.
 
 [Pobierz Audacity](https://www.audacityteam.org/download/)
 
-#### Sox
-Szwajcarski scyzoryk wśród narzędzi do przetwarzania dźwięku z linii poleceń. 
-Może konwertować pliki audio na inne popularne formaty oraz stosować efekty i filtry dźwiękowe podczas konwersji. 
-Wieloplatformowy (Win, OSX, Linux).
-
-[Pobierz Sox](https://sourceforge.net/projects/sox/)
-
 #### wav2digi
-Program linii poleceń, konwertuje plik/pliki WAV do .d8 lub .d15 oraz wypisuje statystyki. Dostępne wersje w językach   
-wysokiego poziomu: _Python, C#, Java._ Napisany przez GPT.  
-Kluczowymi informacjami o wymaganiach podzielił się @tebe [w dyskusji na forum atarionline](https://atarionline.pl/forum/comments.php?DiscussionID=7975page=1#Item_39)
+Program linii poleceń, konwertuje plik/pliki WAV do .d8 lub .d15 oraz wypisuje statystyki. 
+Python, napisany przez GPT. Jeśli potrzbujesz wariant w innych językach wysokiego poziomu jak _C#, Java._ to
+GPT z łatwością przekonwertuje.  Kluczowymi informacjami o wymaganiach podzielił się @tebe [w dyskusji na forum atarionline](https://atarionline.pl/forum/comments.php?DiscussionID=7975page=1#Item_39)
 
-[Pobierz wav2digi](https://github.com/tonual/a8_mp_kitchensink/tree/main/mpt_samples_worklfow/utils)
+[Pobierz wav2digi](https://github.com/tonual/a8_mp_kitchensink/blob/main/mpt_samples_worklfow/utils/wav2digi.py)
 
 #### atr
 Program linii poleceń do manipulacji obrazami dyskietki Atari czyli plikami .atr
@@ -123,12 +115,22 @@ _Free Pascal_ (wybierz wersję dla Twojego systemu) jest potrzebny aby skompilow
 Pobierz [darmowe sample](https://www.bluezone-corporation.com/images/FREE_SOUNDS/Bluezone_Corporation_Free_Chillout_Sample_Pack.zip), 
 rozpakuj pliki i otwórz konkretnie plik __Bluezone-Ambr-drum-loop-005-110.wav__ w Audacity
 
-#### Obróbka 
-Odsłuchaj, to sewkencja perkusyjna z *base drum*, *snare*, *hihat* itd. Zaznacz markerami interesujące fragmenty 
-- kliknij na pozycję aby umieścić kursor a następnice __CTRL + B__. 
-Pomozniczno powiększaj/oddalaj - __CTRL + scroll myszy__.
+#### Obróbka.
+Odsłuchaj, to sewkencja perkusyjna z *base drum*, *snare*, *hihat* itd.  
 
-<img src="screenshots/markers.png" width="500px" style="padding:20px">
+Ustaw próbkowanie na 15Khz lub 8Khz: 
+>Audacity -> Preferences -> Audio Settings -> Project Sample Rate: (other)  
+
+Ustaw jednostkę miary czasu na _"samples"_ 
+> Dolne lewy róg ekranu (zielona ramka) 
+
+Zaznacz myszą fragment sampla i upewnij się, że długość zaznaczenia to wielokroność liczby 256.  
+Aby zrobić to dokładnie, zaznacz myszą "mnie-więcej", a nastpęnie podaj z klawiatury wartość dla "samples".  
+Następnie utwórz marker z zaznaczania  __CTRL + B__ opcjonalnie wpisz nazwę zaznaczenia.
+
+`Pomozniczno powiększaj/oddalaj - __CTRL + scroll myszy__.`
+
+<img src="screenshots/audiocity.png" width="500px" style="padding:20px">
 
 
 >Idealnie kiedy fragment zaczyna się i kończy w miejscu, gdzie amplituda jest zerowa.  
@@ -136,25 +138,37 @@ Pomozniczno powiększaj/oddalaj - __CTRL + scroll myszy__.
 >Dlatego warto zrobić wygaszenie lub wejście sygnału na ambplitudę ręcznie.
 
 W tym celu:
-- Zaznacz myszą krótki fragment w miejscu początkowego markera i zastosuj __Effects -> Fading -> Fade in__
-- Zaznacz myszą krótki fragment przed końcowym markerem i zastosuj __Effects -> Fading -> Fade out__  
+>Zaznacz myszą krótki fragment w miejscu początkowego markera i zastosuj __Effects -> Fading -> Fade in__
+>Zaznacz myszą krótki fragment przed końcowym markerem i zastosuj __Effects -> Fading -> Fade out__  
+
+
+
+
 
 #### Obowiązkowe przetwarzanie
 - zaznacza cały obszar: __CTRL + A__
 - _menu: Tracks -> Mix -> Mix Stereo Down to Mono_
 - _menu: Effect -> Volume and Compression -> Compresor_ | ustaw: *Threshold -20dB, Ratio 10:1* | Apply
-- _menu: Tracks -> Resample_ | wpisz 15000 | OK
 - _menu: Effect -> Volume and Compression -> Normalize_ | ustaw: 0dB | Apply
 - _menu: File -> Export -> Export Mulitple_ | ustaw: format WAV, enconding: Unsigned 8-bit PCM | Export
 
 Ostatnie polecenie zapisuje pociąte fragmenty do osobnych plików .wav.
 Przesłuchaj te pliki, usuń niepotrzbne "pliki-odkrawki".
 
+Przykład długości sampla aby mieścił się "w slocie" pamięci MPT bez paddingu  
+>8 kHz:
+>2048 samples = 0.256 s
+>4096 samples = 0.512 s
+>15 kHz:
+>2048 samples ≈ 0.1365 s
+>4096 samples ≈ 0.273 s
+>
+
 ### Konwersja formatów MPT
 
 #### Linia poleceń
 
-Gwóźdź programu, zachowaj ostrożność. Wybierz środowisko uruchomieniowe do wyboru __Pyhton, .NET lub Java__ [wav2digi](https://github.com/tonual/a8_mp_kitchensink/tree/main/mpt_samples_worklfow/utils)  
+Gwóźdź programu, zachowaj ostrożność.  
 Wyselekcjonowane pliki .wav z samplami przygotowane w poprzednim kroku , powinny znajdować się w dedykowanym __katalogu_z_wav__  
 
 ```
@@ -173,34 +187,25 @@ Przykładowe działanie; w moim przypadku python, a katalog z samplami to _sampl
 ```
 python3 utils/wav2digi.py sample/bluezone_drum bluezone.d15
 Found 5 WAV files to process:
-  - sample/bluezone_drum/Blue_drum-02.wav
-  - sample/bluezone_drum/Blue_drum-04.wav
-  - sample/bluezone_drum/Blue_drum-06.wav
-  - sample/bluezone_drum/Blue_drum-07.wav
-  - sample/bluezone_drum/Blue_drum_03.wav
-Processed sample/bluezone_drum/Blue_drum-02.wav: 4250 4-bit samples (packed to 2304 bytes, padded by 179 bytes)
-Processed sample/bluezone_drum/Blue_drum-04.wav: 3842 4-bit samples (packed to 2048 bytes, padded by 127 bytes)
-Processed sample/bluezone_drum/Blue_drum-06.wav: 4160 4-bit samples (packed to 2304 bytes, padded by 224 bytes)
-Processed sample/bluezone_drum/Blue_drum-07.wav: 4116 4-bit samples (packed to 2304 bytes, padded by 246 bytes)
-Processed sample/bluezone_drum/Blue_drum_03.wav: 3894 4-bit samples (packed to 2048 bytes, padded by 101 bytes)
+  - sample/bluezone_drum/01-bdrum.wav
+  - sample/bluezone_drum/02-snare.wav
+  - sample/bluezone_drum/03-bdrum_hihat.wav
+  - sample/bluezone_drum/04-hihat.wav
+  - sample/bluezone_drum/05-bdrum_snare.wav
+Processed sample/bluezone_drum/01-bdrum.wav: 2048 PCM samples → 2048 4-bit → 1024 bytes (padded 0, final 1024)
+Processed sample/bluezone_drum/02-snare.wav: 2048 PCM samples → 2048 4-bit → 1024 bytes (padded 0, final 1024)
+Processed sample/bluezone_drum/03-bdrum_hihat.wav: 2048 PCM samples → 2048 4-bit → 1024 bytes (padded 0, final 1024)
+Processed sample/bluezone_drum/04-hihat.wav: 2048 PCM samples → 2048 4-bit → 1024 bytes (padded 0, final 1024)
+Processed sample/bluezone_drum/05-bdrum_snare.wav: 4096 PCM samples → 4096 4-bit → 2048 bytes (padded 0, final 2048)
 Created bluezone.d15 with 5 samples.
-Sample addresses: ['$9000', '$9900', '$a100', '$aa00', '$b300']
-Sample lengths: ['2304 bytes', '2048 bytes', '2304 bytes', '2304 bytes', '2048 bytes']
-Total file size: 11040 bytes
+Sample addresses: ['$9000', '$9400', '$9800', '$9c00', '$a000']
+Sample lengths: ['1024 bytes', '1024 bytes', '1024 bytes', '1024 bytes', '2048 bytes']
+Total file size: 6176 bytes
 ```
 W wyniku działania konwertera powstał plik bluzone.d15 w którym znajduje się 5 sampli.  
 
-Jak widać ze statystyk nie za bardzo postarałem się o rzycinanie sampli.. a tym bardziej nie dbałem o to,   
-aby każdy zajmował obszar apamięci o wielkrotności liczby 256.  
-
-Jeśli już pierwszy sample
-doświadczy "paddingu" to siłą rzeczy zostanie "nadjedzony" slot drugiego sampla i nawet jeśli drugi     
-spełnia wymaganie (2048 bajtów), to przesunięcie już się zaczęło.. Komunikaty "padded by"     
-mówią same za siebie. Rozmiar pliku woła o pomostę do nieba 11040 bajtów, marnotrawność!    
-
->Przełącz Audacity w jednostkę miary czasu "samples" i sprawdź, czy długość sampla spełnia wymaganie "x256".  
->Dzięki temu wywalczysz dodatkowe miejsce na dane.
-
+Statystyki pokazują wynik działania konwersji. Istotne jest aby nie wystąpiło "dopełniania" (padding).
+Długość sampli wyrażają się liczbą która jest wielokrotnośćią 256 (1024, 2048, 4096 itd).
 
 ### Obraz dyskietki
 
