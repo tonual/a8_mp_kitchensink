@@ -2,5 +2,5 @@
 md1_player	MD1PLAY
 
 #resources
-md1_modul	MD1	'insanity.md1'
-md1_sample	RCDATA	'insanity.d15'
+md1_modul	MD1	'nutamb.md1'
+md1_sample	RCDATA	'nutamb.d8'

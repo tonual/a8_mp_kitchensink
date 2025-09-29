@@ -9,25 +9,20 @@ var
 	msx: TMD1;
 	ch: char;	
 
-{$r md1_play2.rc}
-//{$r md1_play2.rc}
-
+{$r md1_play.rc}
 
 procedure vbl; interrupt;
  
  begin
  msx.play;
 
-
  asm 
 	jmp xitvbv
  end;
  end;
 
-
 begin
 	SetIntVec(iVBL, @vbl);
-
 
 	while true do begin
 
@@ -37,11 +32,10 @@ begin
 
 	msx.init;
 
-	writeln('Tonual msX 15Khz sampling, 09.2025');
-
+	writeln('Gramy na samplach, 2025');
 
 	repeat		
-		msx.digi(true);
+		msx.digi(false);
 		
 	until keypressed;
 	ch:=readkey();
@@ -49,7 +43,6 @@ begin
 	msx.stop;
 
 	end;
-
 
  repeat until keypressed;
 

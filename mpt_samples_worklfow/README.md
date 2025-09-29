@@ -395,16 +395,43 @@ atr dos_mpt.atr get bluezone.md1
 
 #### Zanim ruszysz dalej
 
-No i mamy muzyczkę na samplach o dobrze będzie móc ją odtworzyć ją na Atari/emulatrze,  
-bez potrzeby korzystania z programu MPT. Taka muzyczka doskonale nada się np. do planszy tytułowej gry.  
-Na więcej może nie starczyć cykli CPU, ponieważ player md1 na samplach (1 kanał) korzysta z przerywania VBLANK  
-i pożera ich większość (wszystkie cykle?).  
+No i mamy muzyczkę na samplach! Teraz użyjemy samodzileny "odtwarzacz" i zagramy bezpośrednio na Atari/emulatrze.  
+Już bez potrzeby korzystania z programu MPT. Nuta na samplach doskonale nada się np. do planszy tytułowej gry.  
 
-#### .xex i Mad assemlber
+Wykorzystanie "zasobów" jest bardzo wysokie - odtwarzacz muzyki .md1 na samplach (1 kanał) korzysta   
+z przerywania VBLANK i pożera ich większość (wszystkie) cykle procesora.  
 
+#### .xex i Mad Assembler
+_linia 990-992_
+```	
+  org $9000
+sample
+	ins 'transil.d15'
+```
 
 
 ## Dodatkowe informacje
+
+### Niuanse 
+
+Jest tego za pewno sporo, ale chcę się podzielić jednym takim co zasiał ferment.  
+Przygotowaując muzczykę na potrzeby tego przewodnika, wykorzystałem tylko pierwszą pozycję "00".   
+W kolejnej linijce 01, ustawiłem rozkaz skoku z porwótem na pozycję "00" - czyli "ff - 00".  
+
+W edytorze MPT wszystko grało i hlało jak trzeba. Jednak kiedy skorzystałem z zewnętrznego odtwarzacza,  
+uruchomiłem przygotowany plik .xex - cisza chociaż program poprawnie się załadował...  
+W monitorze emulatora zwórciłem uwagę na to, że POKEY nie jest wógle wykorzystywany a kod zdaje się   
+kroczyć w krótiej pętli.
+
+Okazało się, że chociaż instrukcja skoku jest na Trac0, to nie można zostawiać pozostałych Trac'ów  
+z wartościami __"ff-ff"__ co __odtwarzacz__ interpretuje jako natychmiastowy znacznik końca utworu   
+z ujemną pozycją restartu, a z kolei edytor MPT nic sobie z tego nie robi.
+
+`
+Jeśli w Track'u jest instrukcja skoku, pozostałe Trac'ki wypełnij pustym patter'nem.
+`
+
+<img src="screenshots/niuanse.png" width=500px style="padding:20px">
 
 ### Instrukcja Music Pro Tracker
 

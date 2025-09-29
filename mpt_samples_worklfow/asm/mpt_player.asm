@@ -962,17 +962,13 @@ licz   org *+1
 przech org *+1
 licptr org *+1
 
-
 .print *
-
 
 	icl 'mpt_relocator.mac'
 
-
 msx	equ $5000
 
-;	mpt_relocator 'insanity.md1' , msx
-	mpt_relocator 'techno4.md1' , msx
+	mpt_relocator 'transil.md1' , msx
 
 	org msx
 
@@ -991,13 +987,10 @@ msx	equ $5000
 ; Brak sampla oznaczony jest zerem na pozycji MSB początku lub końca sampla.
 ; Ponieważ próbki sampla są 4-bitowe, to w jednym bajcie zapisuje się dwie próbki - pierwszą w starszym nibblu, drugą w młodszym nibblu.
 
-
 	org $9000
 sample
-;	ins 'insanity.d15'
-	ins 'tech.d8'
+	ins 'transil.d15'
 
 .print 'smp: $9000..',*-1
 
-	
 	run start
