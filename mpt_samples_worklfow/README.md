@@ -141,26 +141,30 @@ W tym celu:
 >Zaznacz myszą krótki fragment w miejscu początkowego markera i zastosuj __Effects -> Fading -> Fade in__
 >Zaznacz myszą krótki fragment przed końcowym markerem i zastosuj __Effects -> Fading -> Fade out__  
 
-
-
-
-
 #### Obowiązkowe przetwarzanie
-- zaznacza cały obszar: __CTRL + A__
-- _menu: Tracks -> Mix -> Mix Stereo Down to Mono_
+zaznacza cały obszar: __CTRL + A__
+- _menu: Tracks -> Mix -> Mix Stereo Down to Mono_  
+
+__Dla każdtegp fragmentu z osobna__ (doblue-click na markerze aby zanzaczyć fragment) nakładamy compresję i normalizujemy:
 - _menu: Effect -> Volume and Compression -> Compresor_ | ustaw: *Threshold -20dB, Ratio 10:1* | Apply
 - _menu: Effect -> Volume and Compression -> Normalize_ | ustaw: 0dB | Apply
-- _menu: File -> Export -> Export Mulitple_ | ustaw: format WAV, enconding: Unsigned 8-bit PCM | Export
+
+Eksportujemy sample do wielu plików .wav
+- _menu: File -> Export -> Export Mulitple_  
+
+`
+Other uncompresseded files | RAW (heder-less) | Unsigned 8-bit PCM
+`
+<img src="screenshots/formatoption.png" width ="500px" style="padding:20px">
 
 Ostatnie polecenie zapisuje pociąte fragmenty do osobnych plików .wav.
-Przesłuchaj te pliki, usuń niepotrzbne "pliki-odkrawki".
 
 Przykład długości sampla aby mieścił się "w slocie" pamięci MPT bez paddingu  
 >8 kHz:
->2048 samples = 0.256 s
->4096 samples = 0.512 s
->15 kHz:
->2048 samples ≈ 0.1365 s
+>2048 samples = 0.256 s  
+>4096 samples = 0.512 s  
+>15 kHz:  
+>2048 samples ≈ 0.1365 s  
 >4096 samples ≈ 0.273 s
 >
 
@@ -402,6 +406,11 @@ i pożera ich większość (wszystkie cykle?).
 
 ## Dodatkowe informacje
 
+### Instrukcja Music Pro Tracker
+
+### Abraz .atr ze zbiorem muzyczek na samplach
+
+
 ### Źródła dobrej jakości sampli.
 
 - [Modular drums](https://cdn.mos.musicradar.com/musicradar-modular-percussion-samples.zip)
@@ -412,8 +421,10 @@ i pożera ich większość (wszystkie cykle?).
 ### PC DAW
 
 Gorąco polecam pakiet _Digital Audio Workstation_ w postaci programu Ableton.  
-Zestaw, obok bogatej biblioteki sampli wszelakiej maści a zwłaszcza perkusji, oraz "loopów"   
-Posiada liczne narzędzia do tzw "masteringu" i spory wachlarz modułów modyfikacji brzmienia.   
+
+<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
+Zestaw, obok __bogatej biblioteki sampli wszelakiej maści a zwłaszcza perkusji, oraz "loopów"   
+posiada liczne narzędzia do tzw "masteringu" i spory wachlarz modułów modyfikacji brzmienia__.   
 Jest sprytny, prosty w obłsudze a jednocześnie zaawansowany i posiada jedynie 2 widoki: aranżacji i kompozycji.   
 Istniej przystępna, podstawowa wersja - Ablteon Live Lite (klucz można nabyć za symboliczną kwotę)
 
