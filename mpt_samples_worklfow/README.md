@@ -43,12 +43,13 @@
 ---
 
 ## Wstęp
-To jest przewodnik "po sznurku" - od kwestii przygotowania sampla, konwersji formatów, programowania muzyki   
-po kompilację i uruchomienie na standardowym Atari XL/XE. Znajdziesz tu konkretne instrukcje, narzędzia, działające przykłady, kasusy użycia i próbki. Do dzieła!
+To jest przewodnik "po sznurku" - od kwestii przygotowania sampla, konwersji formatów, programowania muzyki  
+po kompilację i uruchomienie na standardowym Atari XL/XE. Znajdziesz tu konkretne instrukcje,  
+narzędzia, działające przykłady, kasusy użycia i próbki. Do dzieła!
 
 ### POKEY + Sample = ♥
-Połączenie syntetycznego POKEY z brzmieniem sampli wzbogaca muzykę Atari o nową jakość. Samplowane zestawy perkusyjne,   
-nuty basu z filtrem dolnoprzepustowym, akordy, czy krótkie
+Połączenie syntetycznego POKEY z brzmieniem sampli wzbogaca muzykę Atari o nową jakość.  
+Samplowane zestawy perkusyjne,   nuty basu z filtrem dolnoprzepustowym, akordy, czy krótkie  
 fragmenty muzyczne (loopy) gotowe do odtwarzania w "pętli" eksponują 
 muzyczne ambicje Atari na nowy poziom. 
 
@@ -62,8 +63,8 @@ Muzyczkę _transcil.xex_ wykonasz samodzielnie na podstawie tego przewodnika!
 ### Najpierw Software 
 
 #### Emulator Atari
-Szkoda zużywać klawiatury wiekowego staruszka... wykorzystaj emulator do pracy. Na deser zawsze 
-można sprawdzić efekt na prawdziwym sprzęcie.
+Szkoda zużywać klawiatury wiekowego staruszka... wykorzystaj emulator do pracy.  
+Na deser zawsze można sprawdzić efekt na prawdziwym sprzęcie.
 - [Altirra](https://www.virtualdub.org/altirra.html)
 - [Atari800](https://github.com/atari800/atari800)
 
@@ -85,20 +86,22 @@ Kilka faktów:
 [Więcej faktów o MPT](http://atariki.krap.pl/index.php/Music_Protracker) 
 
 #### Audacity
-Darmowy, wieloplatformowy (Win, OSX, Linux) program do pracy z samplami - posiada komplet narzędzi wymaganych na potrzeby  
-procesu obróbki i przygotowania sampli da dalszej pracy.
+Darmowy, wieloplatformowy (Win, OSX, Linux) program do pracy z samplami - posiada komplet narzędzi wymaganych  
+na potrzeby procesu obróbki i przygotowania sampli da dalszej pracy.
 
 [Pobierz Audacity](https://www.audacityteam.org/download/)
 
 #### wav2digi
 Program linii poleceń, konwertuje plik/pliki WAV do .d8 lub .d15 oraz wypisuje statystyki. 
-Python, napisany przez GPT. Jeśli potrzebujesz wariant w innych językach wysokiego poziomu jak _C#, Java._ to
-GPT z łatwością przekonwertuje.  Kluczowymi informacjami o wymaganiach podzielił się @tebe [w dyskusji na forum atarionline](https://atarionline.pl/forum/comments.php?DiscussionID=7975page=1#Item_39)
+Python, napisany przez GPT.  
+Jeśli potrzebujesz wariant w innych językach wysokiego poziomu jak _C#, Java._ to
+GPT z łatwością przekonwertuje.  
+Kluczowymi informacjami o wymaganiach podzielił się @tebe [w dyskusji na forum atarionline](https://atarionline.pl/forum/comments.php?DiscussionID=7975page=1#Item_39)
 
 [Pobierz wav2digi](https://github.com/tonual/a8_mp_kitchensink/blob/main/mpt_samples_worklfow/utils/wav2digi.py)
 
 #### atr
-Program linii poleceń do manipulacji obrazami dyskietki Atari czyli plikami .atr
+Program linii poleceń do manipulacji obrazami dyskietki Atari czyli plikami .atr  
 Pozwala min. wylistować zawartość dyskietki, dodać plik, usunąć plik.  
 Podaję link to kodu źródłowego, zatem należy samodzielnie skompilować program dla swojego systemu.  
 Wystraczy zainstalować kompilator języka C, i uruchomić z linii poleceń:
@@ -111,7 +114,8 @@ gcc atr.c
 #### Free Pascal, Mad Assembler, Mad Pascal
 Te narzędzia będą potrzebne, jeśli planujesz wykorzystać muzykę na samplach w swoim programach,  
 lub po prostu chcesz odtworzyć ją bez używania programu _Music Pro Tracker_ w postaci pliku uruchamialnego .xex.  
-_Free Pascal_ (wybierz wersję dla Twojego systemu) jest potrzebny aby skompilować _Mad Assembler_ i _Mad Pascal_, później już z górki.
+_Free Pascal_ (wybierz wersję dla Twojego systemu) jest potrzebny aby skompilować _Mad Assembler_ i _Mad Pascal_,  
+a później już z górki.
 
 [Free Pascal download](https://www.freepascal.org/download.html)  
 [MAD ASSEMBLER download](https://github.com/tebe6502/Mad-Assembler/archive/refs/heads/master.zip)  
@@ -147,14 +151,15 @@ Następnie utwórz marker z zaznaczania  __CTRL + B__ opcjonalnie wpisz nazwę z
 >Dobrze też ręcznie dodać łagodne wejście lub wyciszenie.  
 
 W tym celu:
->Zaznacz myszą krótki fragment w miejscu początkowego markera i zastosuj __Effects -> Fading -> Fade in__
+>Zaznacz myszą krótki fragment w miejscu początkowego markera i zastosuj __Effects -> Fading -> Fade in__  
 >Zaznacz myszą krótki fragment przed końcowym markerem i zastosuj __Effects -> Fading -> Fade out__  
 
 #### Obowiązkowe przetwarzanie
 zaznacza cały obszar: __CTRL + A__
 - _menu: Tracks -> Mix -> Mix Stereo Down to Mono_  
 
-__Dla każdego fragmentu z osobna__ (double-click na markerze aby zanzaczyć fragment) nakładamy compresję i normalizujemy:
+__Dla każdego fragmentu z osobna__ (double-click na markerze aby zanzaczyć fragment) nakładamy  
+kompresję i normalizujemy:
 - _menu: Effect -> Volume and Compression -> Compresor_ | ustaw: *Threshold -20dB, Ratio 10:1* | Apply
 - _menu: Effect -> Volume and Compression -> Normalize_ | ustaw: 0dB | Apply
 
@@ -218,7 +223,7 @@ Total file size: 6176 bytes
 W wyniku działania konwertera powstał plik bluezone.d15 w którym znajduje się 5 sampli.  
 [bluezone.d15](https://github.com/tonual/a8_mp_kitchensink/tree/main/mpt_samples_worklfow/song)  
 
-Statystyki pokazują wynik działania konwersji. Istotne jest aby nie wystąpiło "dopełniania" (padding).
+Statystyki pokazują wynik działania konwersji. Istotne jest aby nie wystąpiło "dopełniania" (padding).  
 Długość sampli wyrażają się liczbą która jest wielokrotnością 256 (1024, 2048, 4096 itd).
 
 ### Obraz dyskietki
