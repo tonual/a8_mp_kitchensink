@@ -153,9 +153,9 @@ Eksportujemy sample do wielu plików .wav
 - _menu: File -> Export -> Export Mulitple_  
 
 `
-Other uncompresseded files | RAW (heder-less) | Unsigned 8-bit PCM
+WAV | Unsigned 8-bit PCM
 `
-<img src="screenshots/formatoption.png" width ="500px" style="padding:20px">
+
 
 Ostatnie polecenie zapisuje pociąte fragmenty do osobnych plików .wav.
 
@@ -395,37 +395,101 @@ atr dos_mpt.atr get bluezone.md1
 
 #### Zanim ruszysz dalej
 
-No i mamy muzyczkę na samplach! Teraz użyjemy samodzileny "odtwarzacz" i zagramy bezpośrednio na Atari/emulatrze.  
+No i mamy muzyczkę na samplach! Teraz użyjemy samodzilny "odtwarzacz" .md1 i zagramy bezpośrednio na Atari/emulatrze.  
 Już bez potrzeby korzystania z programu MPT. Nuta na samplach doskonale nada się np. do planszy tytułowej gry.  
 
 Wykorzystanie "zasobów" jest bardzo wysokie - odtwarzacz muzyki .md1 na samplach (1 kanał) korzysta   
-z przerywania VBLANK i pożera ich większość (wszystkie) cykle procesora.  
+z przerywania VBLANK i pożera większość cykli procesora.  
 
-#### .xex i Mad Assembler
-_linia 990-992_
+#### Player MD1 w assemblerze (MADS)
+
+[Player assemblerowy](https://github.com/tonual/a8_mp_kitchensink/tree/main/mpt_samples_worklfow/asm)  
+Autorem programu jest __Jaskier__
+
+Player udostępnił i dodał komentarz @tebe  
+[Dyskusja na forum atarionline](https://atarionline.pl/forum/comments.php?DiscussionID=7975&page=1#Item_39)
+
+Oprócz .asm jest konieczny relokator pamięci (mmpt_relocator.mac)  
+Sample ładowane są od adresu $9000, a muzyczki pod adres $a000 i kolidują z samplami. 
+Stąd potrzeba relokacji.
+
+Aby skompiliwać player ze swoim utworem/samplami, wystarczy zedytować plik asm w 3 miejscach: 
+
+_linie 59-62_  
+ldx #1 dla sampli w 15Khz, ldx #0 dla sampli w 8Khz
+```
+main
+	lda #5		; sample
+	ldx #1		; 1 - 15Khz ; 0 - 8Khz
+	jsr init
+```
+
+n
+_linie 969-971_
+nazwa pliku .md1
+```
+msx	equ $5000
+mpt_relocator 'muzyczka.md1' , msx
+```  
+
+_linie 990-992_
+nazwa pliku .d15 / .d8 z samplami
 ```	
   org $9000
 sample
-	ins 'transil.d15'
+	ins 'muzyczka.d15'
 ```
 
+Gotowe, kompilujemy standardowym poleceniem  
+`
+mads "mpt_player.asm  -o:mpt_player.xex
+`
+
+#### Player MD1 w Mad Pascalu
+
+[Mad Pascal i przykłady z .md1](https://github.com/tebe6502/Mad-Pascal/tree/master/samples/a8/sound/md1)  
+[Repo tego przewodnika](https://github.com/tonual/a8_mp_kitchensink/tree/main/mpt_samples_worklfow/pas)
+
+Tutaj sprawa jest prostsza i przyjemniejsza. 
+
+W pliku md1_play.rc podajemy odpowiednio nazwę pliku z utworem (.md1) i z samplami (.d8, d15).
+```
+md1_modul	MD1	'nutamb.md1'
+md1_sample	RCDATA	'nutamb.d8'
+```
+
+W pliku md1_play.pas decydujemy o jakości sampli ("true" dla 15Khz,false dla 8Khz)  
+_linia 38_  
+```
+	repeat		
+		msx.digi(false);
+```
+  
+Kompilujemy standardowo najpierw Mad Pascalem do .a65  
+`
+mp md1_play.pas -ipath:scieżka_katalogu_lib_mad_pascala
+`  
+Następnie MAD'sem do .xex  
+`
+mads md1_play.a65 -x -i:scieżka_katalogu_base_mad_pascala -o:md1_play.xex
+`
 
 ## Dodatkowe informacje
 
 ### Niuanse 
 
-Jest tego za pewno sporo, ale chcę się podzielić jednym takim co zasiał ferment.  
+Jest tego pewnie sporo, ale chcę się podzielić jednym takim co zasiał ferment.  
 Przygotowaując muzczykę na potrzeby tego przewodnika, wykorzystałem tylko pierwszą pozycję "00".   
-W kolejnej linijce 01, ustawiłem rozkaz skoku z porwótem na pozycję "00" - czyli "ff - 00".  
+W kolejnej linijce 01, ustawiłem rozkaz skoku z porwotem na pozycję "00", czyli "ff - 00".  
 
-W edytorze MPT wszystko grało i hlało jak trzeba. Jednak kiedy skorzystałem z zewnętrznego odtwarzacza,  
-uruchomiłem przygotowany plik .xex - cisza chociaż program poprawnie się załadował...  
-W monitorze emulatora zwórciłem uwagę na to, że POKEY nie jest wógle wykorzystywany a kod zdaje się   
+W edytorze MPT wszystko grało i hulało jak trzeba. Jednak kiedy skorzystałem z zewnętrznego odtwarzacza i   
+uruchomiłem przygotowany plik .xex - cisza - chociaż program poprawnie się załadował...  
+W monitorze emulatora zwórciłem uwagę na to, że POKEY nie jest wógle wykorzystywany, a kod zdaje się   
 kroczyć w krótiej pętli.
 
 Okazało się, że chociaż instrukcja skoku jest na Trac0, to nie można zostawiać pozostałych Trac'ów  
 z wartościami __"ff-ff"__ co __odtwarzacz__ interpretuje jako natychmiastowy znacznik końca utworu   
-z ujemną pozycją restartu, a z kolei edytor MPT nic sobie z tego nie robi.
+z ujemną pozycją restartu.. edytor MPT nic sobie z tego nie robi. Stąd gruba zmyłka.
 
 `
 Jeśli w Track'u jest instrukcja skoku, pozostałe Trac'ki wypełnij pustym patter'nem.
@@ -435,8 +499,8 @@ Jeśli w Track'u jest instrukcja skoku, pozostałe Trac'ki wypełnij pustym patt
 
 ### Instrukcja Music Pro Tracker
 
-### Abraz .atr ze zbiorem muzyczek na samplach
-
+[Obraz dyskietki .atr z programem MPT oraz pełną instrukcją](http://atariki.krap.pl/images/4/4b/Mpt24s_and_docs.ATR)
+Wystraczy skorzystać z programy _atr_ aby wydostać pliki z obrazu.
 
 ### Źródła dobrej jakości sampli.
 
