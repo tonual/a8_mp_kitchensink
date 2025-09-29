@@ -2,17 +2,19 @@
 
 # Spis treści
 
+# Spis treści
+
 - [Wstęp](#wstęp)
-  - [POKEY + Sample = ♥](#pokey--sample-)
+  - [POKEY + Sample = ♥](#pokey--sample--)
   - [Ale jak to brzmi?](#ale-jak-to-brzmi)
 - [Zrób to sam](#zrób-to-sam)
   - [Najpierw Software](#najpierw-software)
     - [Emulator Atari](#emulator-atari)
-    - [Music Pro Tracker v2.4](#music-pro-tracker-v24)
-    - [Audacity](#audacity)    
+    - [Music Pro Tracker v24](#music-pro-tracker-v24)
+    - [Audacity](#audacity)
     - [wav2digi](#wav2digi)
     - [atr](#atr)
-    - [Free Pascal, Mad Assembler, Mad Pascal](#free-pascal-mad-assembler-mad-pascal)
+    - [Free Pascal Mad Assembler Mad Pascal](#free-pascal-mad-assembler-mad-pascal)
   - [Przygotowanie sampli](#przygotowanie-sampli)
     - [Pozyskaj sample](#pozyskaj-sample)
     - [Obróbka](#obróbka)
@@ -21,32 +23,39 @@
     - [Linia poleceń](#linia-poleceń)
     - [Omówienie statystyk](#omówienie-statystyk)
   - [Obraz dyskietki](#obraz-dyskietki)
-  - [Praca z MPT na emulatorze](#praca-z-mpt-na-emulatrze)
+  - [Praca z MPT na emulatorze](#praca-z-mpt-na-emulatorze)
   - [Ładowanie sampli w MPT](#ładowanie-sampli-w-mpt)
   - [Zagrajmy samplami](#zagrajmy-samplami)
-  - [Dla kozery, dodajmy basik](#dla-kozery-dodajmy-basik)
-  - [Zapisujemy utwór i wyciągamy z obrazu .atr](#zapisujemy-utwór-i-wyciągamy-z-obrazu-atr)
-  - [Tworzymy plik uruchamialny .xex](#tworzymy-plik-uruchamialny-xex)
-- [Źródła dobrej jakości sampli](#źródła-dobrej-jakości-sampli)
-- [PC DAW](#pc-daw)
+  - [Dla kozery dodajmy basik](#dla-kozery-dodajmy-basik)
+  - [Zapisujemy utwór i wyciągamy z obrazu atr](#zapisujemy-utwór-i-wyciągamy-z-obrazu-atr)
+  - [Tworzymy plik uruchamialny xex](#tworzymy-plik-uruchamialny-xex)
+    - [Zanim ruszysz dalej](#zanim-ruszysz-dalej)
+    - [Player MD1 w assemblerze MADS](#player-md1-w-assemblerze-mads)
+    - [Player MD1 w Mad Pascalu](#player-md1-w-mad-pascalu)
+- [Dodatkowe informacje](#dodatkowe-informacje)
+  - [Niuanse](#niuanses)
+  - [Instrukcja Music Pro Tracker](#instrukcja-music-pro-tracker)
+  - [Źródła dobrej jakości sampli](#źródła-dobrej-jakości-sampli)
+  - [PC DAW](#pc-daw)
+
 
 
 ---
 
 ## Wstęp
-To jest przewodnik "po sznurku" - od kwestii przygotowania sampla, konwersjii formatów, programowania muzyki   
+To jest przewodnik "po sznurku" - od kwestii przygotowania sampla, konwersji formatów, programowania muzyki   
 po kompilację i uruchomienie na standardowym Atari XL/XE. Znajdziesz tu konkretne instrukcje, narzędzia, działające przykłady, kasusy użycia i próbki. Do dzieła!
 
 ### POKEY + Sample = ♥
 Połączenie syntetycznego POKEY z brzmieniem sampli wzbogaca muzykę Atari o nową jakość. Samplowane zestawy perkusyjne,   
-nuty basu z filtrem dolnoprzustowym, akordy, czy krótkie
+nuty basu z filtrem dolnoprzepustowym, akordy, czy krótkie
 fragmenty muzyczne (loopy) gotowe do odtwarzania w "pętli" eksponują 
 muzyczne ambicje Atari na nowy poziom. 
 
 ### Ale jak to brzmi?
 Trudno o tym pisać.. po prostu odpal [przykładowy utwór (.xex)](https://github.com/tonual/a8_mp_kitchensink/tree/main/mpt_samples_worklfow/xex) 
 na swoim Atari i posłuchaj.  
-Muzyczkę _transcil.xex_ wykonasz samodzilenie na podstawie tego przewodnika!
+Muzyczkę _transcil.xex_ wykonasz samodzielnie na podstawie tego przewodnika!
 
 ## Zrób to sam
 
@@ -65,10 +74,10 @@ natomiast sample przechowywane są w osobnym pliku (.d8, .d15). Warto zwrócić 
 odtwarzacze muzyki z formatu .md1, zarówno wersji Assemlber jak i __Mad Pascal__ (oczywiście ze wsparciem sampli)
 
 Kilka faktów:
-- max 2 kanały przeznaczone na granie samplami *ten przewodnik dotycz 1 kanału
+- max 2 kanały przeznaczone na granie samplami *ten przewodnik dotyczy 1 kanału
 - max 16 różnych sampli
 - częstotliwość próbkowania: 15Khz lub 8Khz, 4bit, mono
-- możliowść załadowania wielu sampli jednocześnie z jednego pliku
+- możliwość załadowania wielu sampli jednocześnie z jednego pliku
 - formaty pliku z samplami: .d8 (8KHz), .d15 (15Khz)
 - max rozmiar pliku z samplami ~11Kb _*według mojego doświadczenia_
 - max czas sampla 3.4s _*przy 8Khz, według mojego doświadczenia_
@@ -77,13 +86,13 @@ Kilka faktów:
 
 #### Audacity
 Darmowy, wieloplatformowy (Win, OSX, Linux) program do pracy z samplami - posiada komplet narzędzi wymaganych na potrzeby  
-pocesu obróbki i przygotowania sampli da dalszej pracy.
+procesu obróbki i przygotowania sampli da dalszej pracy.
 
 [Pobierz Audacity](https://www.audacityteam.org/download/)
 
 #### wav2digi
 Program linii poleceń, konwertuje plik/pliki WAV do .d8 lub .d15 oraz wypisuje statystyki. 
-Python, napisany przez GPT. Jeśli potrzbujesz wariant w innych językach wysokiego poziomu jak _C#, Java._ to
+Python, napisany przez GPT. Jeśli potrzebujesz wariant w innych językach wysokiego poziomu jak _C#, Java._ to
 GPT z łatwością przekonwertuje.  Kluczowymi informacjami o wymaganiach podzielił się @tebe [w dyskusji na forum atarionline](https://atarionline.pl/forum/comments.php?DiscussionID=7975page=1#Item_39)
 
 [Pobierz wav2digi](https://github.com/tonual/a8_mp_kitchensink/blob/main/mpt_samples_worklfow/utils/wav2digi.py)
@@ -91,7 +100,7 @@ GPT z łatwością przekonwertuje.  Kluczowymi informacjami o wymaganiach podzie
 #### atr
 Program linii poleceń do manipulacji obrazami dyskietki Atari czyli plikami .atr
 Pozwala min. wylistować zawartość dyskietki, dodać plik, usunąć plik.  
-Podaję link to kodu źródłowego, zatem należ samodzielnie skompilować program dla swojego systemu.  
+Podaję link to kodu źródłowego, zatem należy samodzielnie skompilować program dla swojego systemu.  
 Wystraczy zainstalować kompilator języka C, i uruchomić z linii poleceń:
 ```
 gcc atr.c
@@ -100,8 +109,8 @@ gcc atr.c
 [Dokumentacja](https://github.com/jhallen/atari-tools)
 
 #### Free Pascal, Mad Assembler, Mad Pascal
-Te narzędzie będą potrzebne, jeśli planujesz wykorzystać muzykę na samplach w swoim programach,  
-lub po prostu chcesz odtworzyć ją bez używanie programu _Music Pro Tracker_ w postaci pliku uruchamialnego .xex.  
+Te narzędzia będą potrzebne, jeśli planujesz wykorzystać muzykę na samplach w swoim programach,  
+lub po prostu chcesz odtworzyć ją bez używania programu _Music Pro Tracker_ w postaci pliku uruchamialnego .xex.  
 _Free Pascal_ (wybierz wersję dla Twojego systemu) jest potrzebny aby skompilować _Mad Assembler_ i _Mad Pascal_, później już z górki.
 
 [Free Pascal download](https://www.freepascal.org/download.html)  
@@ -116,26 +125,26 @@ Pobierz [darmowe sample](https://www.bluezone-corporation.com/images/FREE_SOUNDS
 rozpakuj pliki i otwórz konkretnie plik __Bluezone-Ambr-drum-loop-005-110.wav__ w Audacity
 
 #### Obróbka.
-Odsłuchaj, to sewkencja perkusyjna z *base drum*, *snare*, *hihat* itd.  
+Odsłuchaj, to sekwencja perkusyjna z *base drum*, *snare*, *hihat* itd.  
 
 Ustaw próbkowanie na 15Khz lub 8Khz: 
 >Audacity -> Preferences -> Audio Settings -> Project Sample Rate: (other)  
 
 Ustaw jednostkę miary czasu na _"samples"_ 
-> Dolne lewy róg ekranu (zielona ramka) 
+> Dolny lewy róg ekranu (zielona ramka) 
 
-Zaznacz myszą fragment sampla i upewnij się, że długość zaznaczenia to wielokroność liczby 256.  
-Aby zrobić to dokładnie, zaznacz myszą "mnie-więcej", a nastpęnie podaj z klawiatury wartość dla "samples".  
+Zaznacz myszą fragment sampla i upewnij się, że długość zaznaczenia to wielokrotność liczby 256.  
+Aby zrobić to dokładnie, zaznacz myszą "mnie-więcej", a następnie podaj z klawiatury wartość dla "samples".  
 Następnie utwórz marker z zaznaczania  __CTRL + B__ opcjonalnie wpisz nazwę zaznaczenia.
 
-`Pomozniczno powiększaj/oddalaj - __CTRL + scroll myszy__.`
+`Pomocniczo powiększaj/oddalaj - __CTRL + scroll myszy__.`
 
 <img src="screenshots/audiocity.png" width="500px" style="padding:20px">
 
 
->Idealnie kiedy fragment zaczyna się i kończy w miejscu, gdzie amplituda jest zerowa.  
->Należy postarać się, aby fragment był jak najkrótszy a jednocześnie zachował sens swojego brzmienia.  
->Dlatego warto zrobić wygaszenie lub wejście sygnału na ambplitudę ręcznie.
+>Najlepiej, gdy fragment zaczyna się i kończy w punkcie zerowej amplitudy.   
+>Warto, aby był możliwie krótki, ale zachowywał charakter brzmienia.    
+>Dobrze też ręcznie dodać łagodne wejście lub wyciszenie.  
 
 W tym celu:
 >Zaznacz myszą krótki fragment w miejscu początkowego markera i zastosuj __Effects -> Fading -> Fade in__
@@ -145,12 +154,12 @@ W tym celu:
 zaznacza cały obszar: __CTRL + A__
 - _menu: Tracks -> Mix -> Mix Stereo Down to Mono_  
 
-__Dla każdtegp fragmentu z osobna__ (doblue-click na markerze aby zanzaczyć fragment) nakładamy compresję i normalizujemy:
+__Dla każdego fragmentu z osobna__ (double-click na markerze aby zanzaczyć fragment) nakładamy compresję i normalizujemy:
 - _menu: Effect -> Volume and Compression -> Compresor_ | ustaw: *Threshold -20dB, Ratio 10:1* | Apply
 - _menu: Effect -> Volume and Compression -> Normalize_ | ustaw: 0dB | Apply
 
-Eksportujemy sample do wielu plików .wav
-- _menu: File -> Export -> Export Mulitple_  
+Eksportujemy sample do wielu plików .wav za jednym zamachem.
+- _menu: File -> Export -> Export Multiple  
 
 `
 WAV | Unsigned 8-bit PCM
@@ -178,7 +187,7 @@ Wyselekcjonowane pliki .wav z samplami przygotowane w poprzednim kroku , powinny
 ```
 wav2digi katalog_z_wav mojesample.d15
 ```
-Rozszerzenie .d15 stosujemu kiedy sample mają 15Khz, .d8 kiedy 8Khz.   
+Rozszerzenie .d15 stosujemy kiedy sample mają 15Khz, .d8 kiedy 8Khz.   
 Istnieje eksperymentalna możliwość podania adresu pamięci do załadowania sampli (na własną odpowiedzialność).  
 Pełny format linii poleceń to:
 ```
@@ -206,17 +215,18 @@ Sample addresses: ['$9000', '$9400', '$9800', '$9c00', '$a000']
 Sample lengths: ['1024 bytes', '1024 bytes', '1024 bytes', '1024 bytes', '2048 bytes']
 Total file size: 6176 bytes
 ```
-W wyniku działania konwertera powstał plik bluzone.d15 w którym znajduje się 5 sampli.  
+W wyniku działania konwertera powstał plik bluezone.d15 w którym znajduje się 5 sampli.  
+[bluezone.d15](https://github.com/tonual/a8_mp_kitchensink/tree/main/mpt_samples_worklfow/song)  
 
 Statystyki pokazują wynik działania konwersji. Istotne jest aby nie wystąpiło "dopełniania" (padding).
-Długość sampli wyrażają się liczbą która jest wielokrotnośćią 256 (1024, 2048, 4096 itd).
+Długość sampli wyrażają się liczbą która jest wielokrotnością 256 (1024, 2048, 4096 itd).
 
 ### Obraz dyskietki
 
-W tym kroku stworzymy obraz dyskieti Atari z samplami (plik .d15), programem MPT oraz DOSem.  
+W tym kroku stworzymy obraz dyskietki Atari z samplami (plik .d15), programem MPT oraz DOSem.  
 Ponieważ sample będą ładowane z poziomu programu MPT, DOS jest niezbędny i będzie wspierał operacje odczytu/zapisu.
 
-Pobież [gotowy obrazu dyskieti .atr](https://github.com/tonual/a8_mp_kitchensink/blob/main/mpt_samples_worklfow/atr/dos_mpt.atr), który ma już DOSa i MPT. Wystarczy zatem wrzucić pliki sampli.  
+Pobierz [gotowy obrazu dyskietki .atr](https://github.com/tonual/a8_mp_kitchensink/blob/main/mpt_samples_worklfow/atr/dos_mpt.atr), który ma już DOSa i MPT. Wystarczy zatem wrzucić pliki sampli.  
 Wcześniej krótka rozgrzewka - wylistuj pliki w obrazie:
 ```
 atr dos_mpt.atr ls
@@ -230,7 +240,7 @@ atr dos_mpt.atr put bluezone.d15
 
 [Składnia linii poleceń atr](https://github.com/jhallen/atari-tools?tab=readme-ov-file#atr-syntax)
 
-### Praca z MPT na emulatrze
+### Praca z MPT na emulatorze
 
 Przygotowany obraz dyskiet atr. Odpalamy w emulatorze Atari. Najprościej jest "przeciągnąć" myszką plik .atr
 na okno emulatora.  
@@ -242,14 +252,14 @@ DIR
 <img src="screenshots/dos.png" width ="500px" style="padding:20px">
 
 Odpalamy program MPT. Ten przewodnik uwzględnia popularną wersję 2.4.    
-(Wersja 2.4S obłusguje stereo, a 2.11 dorzucona jest dla towarzystwa)  
-Czyli wpisujemy nazwę pogramu __MPT24__ i _ENTER_
+(Wersja 2.4S obsługuje stereo, a 2.11 dorzucona jest dla towarzystwa)  
+Czyli wpisujemy nazwę programu __MPT24__ i _ENTER_
 ```
 MPT24
 ```
 <img src="screenshots/mpt1.png" width=500px style="padding:20px">  
 
-Nacieszmy się chwilę prostym a zarazem praktycznym interfejsum użytkownika.   
+Nacieszmy się chwilę prostym a zarazem praktycznym interfejsem użytkownika.   
 Od tej chwili myszkę można odsunąć..dalej od siebie.
 
 ### Ładowanie sampli w MPT
@@ -260,7 +270,7 @@ Między oknami poruszamy się naciskając __TAB__. Migający kursor informuje, w
 Załadujmy nasze sample.  
 Z dowolnego okna, do górnego menu przechodzimy naciskająć __CTRL + TAB__ , a następnie   
 strzałkami ← → wybieramy __Special__ i naciskamy _ENTER_  
-Teraz strzałkami ↑  ↓ poruszmay się po opcjach i wybieramy klawiszem _ENTER_ ustawienia:  
+Teraz strzałkami ↑  ↓ poruszamy się po opcjach i wybieramy klawiszem _ENTER_ ustawienia:  
 
 ```
 15Khz:  ON  
@@ -307,8 +317,8 @@ Na wszelki wypadek upewniamy się, oktawy ustawione są na __1:2__.
 ```
 <img src="screenshots/mpt4.png" width=500px style="padding:20px">
 
-Kolejno przechodizmy do okna _Pattern_ klawiszem __TAB__ i wpisujemy sekwencje - kolejno litery odpowiedające nutą.  
-Pod każdą z tych nut, zmapowany jest pojedyńczy sample.  
+Kolejno przechodizmy do okna _Pattern_ klawiszem __TAB__ i wpisujemy sekwencje - kolejno litery odpowiedające nutom.   
+Pod każdą z tych nut, zmapowany jest pojedyńczy sampl.  
 Znaki klawiatury odpowiadają nutą, zapis wygląda tak (cyfra 2 przy nucie to numer oktawy):
 Wpisujemy:
 ```
@@ -334,7 +344,7 @@ Przesuńmy kursor na początek i odtwórzymy pattern __CTRL + P__
 Zatrzymaj odtwarzanie z __SHIFT + P__  
 (w razie czego strzałki ← → zmieniają numer aktualnie edytowanego patternu)
 
-Ponieważ wprwadziliśmy tylko kilka nut, a długość taku jest o wiele dłuższa, wejdźmy do menu __CTR + TAB__  
+Ponieważ wprowadziliśmy tylko kilka nut, a długość taku jest o wiele dłuższa, wejdźmy do menu __CTRL + TAB__  
  ← → _Special_ __ENTER__ ↑  ↓ _LenPat_ __ENTER__ i ustawmy długość taktu na 10 - strzałki ↑  ↓  i __ENTER__  
  Wychodzimy __ESC__, __ESC__
 
@@ -346,23 +356,23 @@ Wracamy do edycji __Voice__ (niebieska ramka).
 Strzałkami  ← →  ustawiamy numer 01 (numer instrumentu), i przechodzimy do jego edycji __CTRL + E__  
 Teraz po licznych pozycjach ustawień poruszamy się strzałkami ← → ↑  ↓ 
 
-Twoim zadaniem jest odwzorowanie ustwień z obrazka (kolorwe ramki). Kluczowa wartość to litera _"c"_ w dolnym rzędzie.  
+Twoim zadaniem jest odwzorowanie ustwień z obrazka (kolorowe ramki). Kluczowa wartość to litera _"c"_ w dolnym rzędzie.  
 "Poziome paski" w 16 pozycjach to obwiednia głośności, czyli funkcja głośności instrumentu w czasie.  
-Zmieniamy pozycję kursora na obwiedni strzałkami ← →, a następnie __CTR: + '-'__ lub __CTR: + '+'__ podbijamy lub ściszamy.  
-Z edycji instrumentu wychodzimy zatiwerdzając  - __ENTER__
+Zmieniamy pozycję kursora na obwiedni strzałkami ← →, a następnie __CTRL: + '-'__ lub __CTRL: + '+'__ podbijamy lub ściszamy.  
+Z edycji instrumentu wychodzimy zatwierdzając  - __ENTER__
 
-Teraz deser - pograjmy sobie tym instrumentem! Poniej mapowanie klawiatry na dźwięki.  
+Teraz deser - pograjmy sobie tym instrumentem! Poniżej mapowanie klawiatury na dźwięki.  
 >credits www.music-tracker-online.com
 
 <img src="screenshots/keyboard-layout.png" width=500px style="padding:20px">
 
 Teraz zapiszmy swoje nuty i zagrajmy razem z perkusją. Przechodzimy __TAB__ do Pattern,  
-strzałkami ← → ustawimy wolny slot czyli 01 i wpisujmey nutki (pomarńczowa ramka).
+strzałkami ← → ustawimy wolny slot czyli 01 i wpisujemy nutki (pomarńczowa ramka).
 
 Na koniec __TAB__ przechodzimu do widoku "kompozycji" (zielona ramka) i wprowadzamy:  
-__Trac0__ to sample czyli _pattern 00_, nastpeni __Trac1__ to bas czyli _pattern 01_.  
-Pozsotałe tracki (Trac2, Trac6) wypełniamy pustym patternem czyli np _06_.  
-W linii 01 jest zapis _ff-00_. Pierwszy człon informuje tracker o __instrukcji skoku__, a 00 to pozaycja skoku (czyli początek)  
+__Trac0__ to sample czyli _pattern 00_, następnie __Trac1__ to bas czyli _pattern 01_.  
+Pozostałe tracki (Trac2, Trac6) wypełniamy pustym patternem czyli np _06_.  
+W linii 01 jest zapis _ff-00_. Pierwszy człon informuje tracker o __instrukcji skoku__, a 00 to pozycja skoku (czyli początek)  
 
 Gotowe! Zagrajmy przed zapisem __CTRL + P__ , __'P'__ a __SHIFT + P__   to zatrzymanie grajka.
 
@@ -395,7 +405,7 @@ atr dos_mpt.atr get bluezone.md1
 
 #### Zanim ruszysz dalej
 
-No i mamy muzyczkę na samplach! Teraz użyjemy samodzilny "odtwarzacz" .md1 i zagramy bezpośrednio na Atari/emulatrze.  
+No i mamy muzyczkę na samplach! Teraz użyjemy samodzielny "odtwarzacz" .md1 i zagramy bezpośrednio na Atari/emulatorze.  
 Już bez potrzeby korzystania z programu MPT. Nuta na samplach doskonale nada się np. do planszy tytułowej gry.  
 
 Wykorzystanie "zasobów" jest bardzo wysokie - odtwarzacz muzyki .md1 na samplach (1 kanał) korzysta   
@@ -413,7 +423,7 @@ Oprócz .asm jest konieczny relokator pamięci (mmpt_relocator.mac)
 Sample ładowane są od adresu $9000, a muzyczki pod adres $a000 i kolidują z samplami. 
 Stąd potrzeba relokacji.
 
-Aby skompiliwać player ze swoim utworem/samplami, wystarczy zedytować plik asm w 3 miejscach: 
+Aby skompilować player ze swoim utworem/samplami, wystarczy zedytować plik asm w 3 miejscach: 
 
 _linie 59-62_  
 ldx #1 dla sampli w 15Khz, ldx #0 dla sampli w 8Khz
@@ -467,11 +477,11 @@ _linia 38_
   
 Kompilujemy standardowo najpierw Mad Pascalem do .a65  
 `
-mp md1_play.pas -ipath:scieżka_katalogu_lib_mad_pascala
+mp md1_play.pas -ipath:ścieżka_katalogu_lib_mad_pascala
 `  
 Następnie MAD'sem do .xex  
 `
-mads md1_play.a65 -x -i:scieżka_katalogu_base_mad_pascala -o:md1_play.xex
+mads md1_play.a65 -x -i:ścieżka_katalogu_base_mad_pascala -o:md1_play.xex
 `
 
 ## Dodatkowe informacje
@@ -479,13 +489,13 @@ mads md1_play.a65 -x -i:scieżka_katalogu_base_mad_pascala -o:md1_play.xex
 ### Niuanse 
 
 Jest tego pewnie sporo, ale chcę się podzielić jednym takim co zasiał ferment.  
-Przygotowaując muzczykę na potrzeby tego przewodnika, wykorzystałem tylko pierwszą pozycję "00".   
-W kolejnej linijce 01, ustawiłem rozkaz skoku z porwotem na pozycję "00", czyli "ff - 00".  
+Przygotowując muzykę na potrzeby tego przewodnika, wykorzystałem tylko pierwszą pozycję "00".   
+W kolejnej linijce 01, ustawiłem rozkaz skoku z powrotem na pozycję "00", czyli "ff - 00".  
 
 W edytorze MPT wszystko grało i hulało jak trzeba. Jednak kiedy skorzystałem z zewnętrznego odtwarzacza i   
 uruchomiłem przygotowany plik .xex - cisza - chociaż program poprawnie się załadował...  
-W monitorze emulatora zwórciłem uwagę na to, że POKEY nie jest wógle wykorzystywany, a kod zdaje się   
-kroczyć w krótiej pętli.
+W monitorze emulatora zwróciłem uwagę na to, że POKEY nie jest w ogóle wykorzystywany, a kod zdaje się   
+kroczyć w krótkiej pętli.
 
 Okazało się, że chociaż instrukcja skoku jest na Trac0, to nie można zostawiać pozostałych Trac'ów  
 z wartościami __"ff-ff"__ co __odtwarzacz__ interpretuje jako natychmiastowy znacznik końca utworu   
@@ -516,7 +526,7 @@ Gorąco polecam pakiet _Digital Audio Workstation_ w postaci programu Ableton.
 <!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
 Zestaw, obok __bogatej biblioteki sampli wszelakiej maści a zwłaszcza perkusji, oraz "loopów"   
 posiada liczne narzędzia do tzw "masteringu" i spory wachlarz modułów modyfikacji brzmienia__.   
-Jest sprytny, prosty w obłsudze a jednocześnie zaawansowany i posiada jedynie 2 widoki: aranżacji i kompozycji.   
-Istniej przystępna, podstawowa wersja - Ablteon Live Lite (klucz można nabyć za symboliczną kwotę)
+Jest sprytny, prosty w obsłudze a jednocześnie zaawansowany i posiada jedynie 2 widoki: aranżacji i kompozycji.   
+Istniej przystępna, podstawowa wersja - Ableton Live Lite (klucz można nabyć za symboliczną kwotę)
 
 [Ableteon Live Lite](https://www.ableton.com/en/products/live-lite/)
