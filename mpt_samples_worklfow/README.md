@@ -33,7 +33,7 @@
     - [Player MD1 w assemblerze MADS](#player-md1-w-assemblerze-mads)
     - [Player MD1 w Mad Pascalu](#player-md1-w-mad-pascalu)
 - [Dodatkowe informacje](#dodatkowe-informacje)
-  - [Niuanse](#niuanses)
+  - [Edytor MPT vs Player niuanse](#edytor-mpt-vs-player-niuanse)
   - [Instrukcja Music Pro Tracker](#instrukcja-music-pro-tracker)
   - [Źródła dobrej jakości sampli](#źródła-dobrej-jakości-sampli)
   - [PC DAW](#pc-daw)
@@ -56,7 +56,7 @@ muzyczne ambicje Atari na nowy poziom.
 ### Ale jak to brzmi?
 Trudno o tym pisać.. po prostu odpal [przykładowy utwór (.xex)](https://github.com/tonual/a8_mp_kitchensink/tree/main/mpt_samples_worklfow/xex) 
 na swoim Atari i posłuchaj.  
-Muzyczkę _transcil.xex_ wykonasz samodzielnie na podstawie tego przewodnika!
+Muzyczkę [bluezone_test_15Khz.xex](https://github.com/tonual/a8_mp_kitchensink/blob/main/mpt_samples_worklfow/xex/bluezone_test_15Khz.xex) wykonasz samodzielnie na podstawie tego przewodnika!
 
 ## Zrób to sam
 
@@ -138,11 +138,14 @@ Ustaw jednostkę miary czasu na _"samples"_
 > Dolny lewy róg ekranu (zielona ramka) 
 
 Zaznacz myszą fragment sampla i upewnij się, że długość zaznaczenia to wielokrotność liczby 256.  
-Aby zrobić to dokładnie, zaznacz myszą "mnie-więcej", a następnie podaj z klawiatury wartość dla "samples".  
+Aby zrobić to dokładnie, zaznacz myszą "mnie-więcej", a następnie podaj z klawiatury wartość dla "samples"  
 Następnie utwórz marker z zaznaczania  __CTRL + B__ opcjonalnie wpisz nazwę zaznaczenia.
 
 `Pomocniczo powiększaj/oddalaj - __CTRL + scroll myszy__.`
 
+`
+Wartość długości "samples" wspisujemy w formatkę na dole ekranu, (zielona ramka).
+` 
 <img src="screenshots/audiocity.png" width="500px" style="padding:20px">
 
 
@@ -156,22 +159,23 @@ W tym celu:
 
 #### Obowiązkowe przetwarzanie
 zaznacza cały obszar: __CTRL + A__
-- _menu: Tracks -> Mix -> Mix Stereo Down to Mono_  
+- menu: Tracks -> Mix -> Mix Stereo Down to Mono
 
 __Dla każdego fragmentu z osobna__ (double-click na markerze aby zanzaczyć fragment) nakładamy  
 kompresję i normalizujemy:
-- _menu: Effect -> Volume and Compression -> Compresor_ | ustaw: *Threshold -20dB, Ratio 10:1* | Apply
-- _menu: Effect -> Volume and Compression -> Normalize_ | ustaw: 0dB | Apply
+- menu: Effect -> Volume and Compression -> Compresor | ustaw: *Threshold -20dB, Ratio 10:1* | Apply
+- menu: Effect -> Volume and Compression -> Normalize | ustaw: 0dB | Apply
 
 Eksportujemy sample do wielu plików .wav za jednym zamachem.
-- _menu: File -> Export -> Export Multiple  
+- menu: File -> Export -> Export Multiple  
 
 `
 WAV | Unsigned 8-bit PCM
 `
 
-
 Ostatnie polecenie zapisuje pociąte fragmenty do osobnych plików .wav.
+
+[bluezone_drum](https://github.com/tonual/a8_mp_kitchensink/tree/main/mpt_samples_worklfow/sample/bluezone_drum)
 
 Przykład długości sampla aby mieścił się "w slocie" pamięci MPT bez paddingu  
 >8 kHz:
@@ -269,8 +273,15 @@ Od tej chwili myszkę można odsunąć..dalej od siebie.
 
 ### Ładowanie sampli w MPT
 
-Interfejs użytkownika dzieli się na 3 sekcje: Song(Trac0 Track1 Trac2 Trac3), Pattern, Voice oraz górne menu (File Edit Special Sampler Exit).  
-Między oknami poruszamy się naciskając __TAB__. Migający kursor informuje, w którym oknie aktualnie się znajdujemy.
+Interfejs użytkownika dzieli się na 3 sekcje:   
+- Song Trac0 Track1 Trac2 Trac3  
+- Pattern (takty), 
+- Voice (instrumenty)
+- górne menu _File | Edit | Special | Sampler Exit_
+
+
+>Między oknami poruszamy się naciskając __TAB__.  
+>Migający kursor informuje, w którym oknie aktualnie się znajdujemy.
 
 Załadujmy nasze sample.  
 Z dowolnego okna, do górnego menu przechodzimy naciskająć __CTRL + TAB__ , a następnie   
@@ -295,8 +306,7 @@ Teraz wpisujemy nazwę pliku z naszymi samplami i _ENTER_, czyli
 ```
 BLUEZONE.D15
 ```
-Teraz opuszczamy menu naciskając __ESC__, __ESC__.
-Sample 
+Opuszczamy menu naciskając __ESC__, __ESC__.
 
 >Wartości heksadecymalne wyświetlane w widoku sampli reprezentują spakowaną długość każdego zdigitalizowanego sampla   
 >w bajtach, pokazaną w formacie szesnastkowym (z bajtem starszym na początku, tj. w kolejności big-endian). Długości te  
@@ -318,7 +328,7 @@ Pod tym numerem mamy dostęp na naszym sampli.
 Na wszelki wypadek upewniamy się, oktawy ustawione są na __1:2__.  
 (W razie czego, bedąc w oknie _Voice_ można to zmienić srzałkami ↑  ↓)
 ```
-1f
+1f  1:2
 ```
 <img src="screenshots/mpt4.png" width=500px style="padding:20px">
 
@@ -344,8 +354,8 @@ spacja
 'G'       (G 2)   bass drum + snare seq
 ```
 Aby przenieść kursor na wybraną nutę, poruszamy się srzałkami ↑  ↓  
-__SHIFT+Del__ usuwa zaznaczoną nutę, a __SHIFT+Ins__ wstawia puste miejsce.  
-Przesuńmy kursor na początek i odtwórzymy pattern __CTRL + P__  
+__SHIFT + Del__ usuwa zaznaczoną nutę, a __SHIFT + Ins__ wstawia puste miejsce.  
+Przesuńmy kursor na początek i zagrajmy pattern __CTRL + P__  
 Zatrzymaj odtwarzanie z __SHIFT + P__  
 (w razie czego strzałki ← → zmieniają numer aktualnie edytowanego patternu)
 
@@ -383,6 +393,13 @@ Gotowe! Zagrajmy przed zapisem __CTRL + P__ , __'P'__ a __SHIFT + P__   to zatrz
 
 <img src="screenshots/mpt6.png" width=500px style="padding:20px">
 
+`POPRAWKA`
+Istnieją subtelne różnice między playerem MPT a playerem zewnętrznym,  
+dlatego linia 01 musi być poprawiona na 
+>ff-00 06-00 06-00, 06-00
+
+[Dowiedz się dlatego](#edytor-mpt-vs-player-niuanse)
+
 ### Zapisujemy utwór i wyciągamy z obrazu .atr
 
 Teraz już z górki. Wchodzimy do menu __CTRL + TAB__ , strzałkami ← → wybieramy _File_ i __ENTER__.  
@@ -391,8 +408,9 @@ Load  - L
 Save  - S
 ```
 Wybieramy 'S' (save), podajemy nazwę utworu z rozszerzeniem .md1 i __ENTER__ (dla ułatwienia, proponuję użyć nazwy sampli) 
->BLUEZONE.MD1
-Utwór nagrał się na obrazie dyskietki .atr.  
+>BLUEZONE.MD1  
+
+Utwór nagrał się w obrazie dyskietki .atr.  
 Dla pewności wylistujmy pliki.  
 ```
 atr dos_mpt.atr ls
@@ -402,7 +420,7 @@ Powinna być para, czyli:
 BLUEZONE.MD1
 BLUEZONE.D15
 ```
-Teraz wyciągamy go z obrazu .atr to lokalnego systemu plików za pomocą atrybuty _get_.
+Teraz wyciągamy go z obrazu .atr to lokalnego systemu plików za pomocą _get_.
 ```
 atr dos_mpt.atr get bluezone.md1
 ```
@@ -410,7 +428,7 @@ atr dos_mpt.atr get bluezone.md1
 
 #### Zanim ruszysz dalej
 
-No i mamy muzyczkę na samplach! Teraz użyjemy samodzielny "odtwarzacz" .md1 i zagramy bezpośrednio na Atari/emulatorze.  
+No i mamy muzyczkę na samplach! Teraz użyjemy samodzielny "player" .md1 i zagramy bezpośrednio na Atari/emulatorze.  
 Już bez potrzeby korzystania z programu MPT. Nuta na samplach doskonale nada się np. do planszy tytułowej gry.  
 
 Wykorzystanie "zasobów" jest bardzo wysokie - odtwarzacz muzyki .md1 na samplach (1 kanał) korzysta   
@@ -428,7 +446,7 @@ Oprócz .asm jest konieczny relokator pamięci (mmpt_relocator.mac)
 Sample ładowane są od adresu $9000, a muzyczki pod adres $a000 i kolidują z samplami. 
 Stąd potrzeba relokacji.
 
-Aby skompilować player ze swoim utworem/samplami, wystarczy zedytować plik asm w 3 miejscach: 
+Aby skompilować player ze swoim utworem/samplami, wystarczy zedytować plik _mpt_player.asm_ w trzech miejscach: 
 
 _linie 59-62_  
 ldx #1 dla sampli w 15Khz, ldx #0 dla sampli w 8Khz
@@ -439,12 +457,11 @@ main
 	jsr init
 ```
 
-n
 _linie 969-971_
-nazwa pliku .md1
+podajemy nazwę pliku .md1
 ```
 msx	equ $5000
-mpt_relocator 'muzyczka.md1' , msx
+mpt_relocator 'bluzone.md1' , msx
 ```  
 
 _linie 990-992_
@@ -452,12 +469,12 @@ nazwa pliku .d15 / .d8 z samplami
 ```	
   org $9000
 sample
-	ins 'muzyczka.d15'
+	ins 'bluezone.d15'
 ```
 
 Gotowe, kompilujemy standardowym poleceniem  
 `
-mads "mpt_player.asm  -o:mpt_player.xex
+mads "mpt_player.asm  -o:bluezone.xex
 `
 
 #### Player MD1 w Mad Pascalu
@@ -469,8 +486,8 @@ Tutaj sprawa jest prostsza i przyjemniejsza.
 
 W pliku md1_play.rc podajemy odpowiednio nazwę pliku z utworem (.md1) i z samplami (.d8, d15).
 ```
-md1_modul	MD1	'nutamb.md1'
-md1_sample	RCDATA	'nutamb.d8'
+md1_modul	MD1	'bluezone.md1'
+md1_sample	RCDATA	'bluzone.d8'
 ```
 
 W pliku md1_play.pas decydujemy o jakości sampli ("true" dla 15Khz,false dla 8Khz)  
@@ -491,11 +508,11 @@ mads md1_play.a65 -x -i:ścieżka_katalogu_base_mad_pascala -o:md1_play.xex
 
 ## Dodatkowe informacje
 
-### Niuanse 
+### Edytor MPT vs Player niuanse 
 
 Jest tego pewnie sporo, ale chcę się podzielić jednym takim co zasiał ferment.  
 Przygotowując muzykę na potrzeby tego przewodnika, wykorzystałem tylko pierwszą pozycję "00".   
-W kolejnej linijce 01, ustawiłem rozkaz skoku z powrotem na pozycję "00", czyli "ff - 00".  
+W kolejnej linijce 01, ustawiłem rozkaz skoku z powrotem na pozycję "00", czyli "ff - 00" (zapętlenie grania).
 
 W edytorze MPT wszystko grało i hulało jak trzeba. Jednak kiedy skorzystałem z zewnętrznego odtwarzacza i   
 uruchomiłem przygotowany plik .xex - cisza - chociaż program poprawnie się załadował...  
@@ -514,8 +531,10 @@ Jeśli w Track'u jest instrukcja skoku, pozostałe Trac'ki wypełnij pustym patt
 
 ### Instrukcja Music Pro Tracker
 
-[Obraz dyskietki .atr z programem MPT oraz pełną instrukcją](http://atariki.krap.pl/images/4/4b/Mpt24s_and_docs.ATR)
-Wystraczy skorzystać z programy _atr_ aby wydostać pliki z obrazu.
+[Kompilacja, formatowanie z GPT](https://github.com/tonual/a8_mp_kitchensink/blob/main/mpt_samples_worklfow/mpt_manual/MusicProTracker_full_manual.md)
+
+[Obraz dyskietki .atr, instrukcja orginalna](http://atariki.krap.pl/images/4/4b/Mpt24s_and_docs.ATR)  
+(Wystraczy skorzystać z programy _atr_ aby wydostać pliki tesktowe z obrazu)
 
 ### Źródła dobrej jakości sampli.
 
@@ -524,7 +543,7 @@ Wystraczy skorzystać z programy _atr_ aby wydostać pliki z obrazu.
 - [Minimal Techno](https://www.bluezone-corporation.com/images/FREE_SOUNDS/Bluezone_Corporation_Free_Minimal_Techno_Sample_Pack.zip)
 - [Psytrance](https://www.bluezone-corporation.com/images/FREE_SOUNDS/Bluezone_Corporation_Free_Psytrance_Sample_Pack.zip)
 
-### PC DAW
+### PC DAW - wstępny etap przygotowania sampli
 
 Gorąco polecam pakiet _Digital Audio Workstation_ w postaci programu Ableton.  
 

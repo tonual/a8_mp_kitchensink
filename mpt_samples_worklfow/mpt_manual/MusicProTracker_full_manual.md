@@ -6,6 +6,130 @@ Opis układów POKEY, rejestrów oraz podstaw działania (sekcja wprowadzająca 
 
 ---
 
+# Voice (Instrumenty)
+
+Voicy (instrumenty) są najbardziej rozbudowaną częścią MPt.
+
+### Struktura instrumentu
+
+```
+[PS] [PA]
+
+00 -00
+00 1-00
+00 2-00
+00 3-00
+00 4-00
+NA → numery akcentów
+NP → numery parametrów akcentów (0-7)
+WZ → wartości zniekształceń
+```
+
+- **PS** – parametry sterujące instrumentem  
+- **PA** – parametry akcentów  
+- **NA** – numery akcentów  
+- **NP** – numery parametrów akcentów  
+- **WZ** – wartości zniekształceń  
+
+### Akcenty
+
+1. parametr → AUDF  
+2. parametr+AUDF → AUDF  
+3. parametr+(numer nuty) → AUDF  
+4. jak 1 + wyłączenie dzielnika  
+5. jak 1 + rejestr 9-bitowy  
+6. jak 1 + 15 kHz  
+7. parametr AND (losowa) → AUDF  
+
+### Efekty (0–7)
+
+0. łagodne falowanie częstotliwości  
+1. dodanie parametru do AUDF  
+2. opadanie częstotliwości  
+3. szybkie opadanie o kilka nut  
+4. podwyższanie częstotliwości  
+5. szybkie podwyższanie  
+6. głębokie falowanie (efekty dźwiękowe)  
+7. jak 6, ale w większej skali  
+
+Instrument może też korzystać z różnych tablic częstotliwości, ustawiać AUDCTL, wyciszanie, transpozycje (np. tremolo).  
+
+---
+
+# Pattern (Patern)
+
+EP – edytor patternów. Klawiatura działa jak klawiatura muzyczna, `SPACE` = pusta nuta.  
+
+### Funkcje
+
+- **Transposition (CTRL+T)** – przesunięcie instrumentu o x półtonów  
+- **Change (CTRL+X)** – zamiana instrumentu  
+- **SHIFT+TAB** – zamiana instrumentu na pozycji  
+
+### Przykład patternu
+
+```
+|00|G-2 00S7|
+|01|G-3 00VF|
+|02|G-2 00VF|
+|03|G-3 00VF|
+|04|A#2 00VF|
+|05|A#3 00VF|
+|06|A#2 00VF|
+|07|A#3 00VF|
+|08|D-3 00VF|
+|09|D-4 00VF|
+|0A|D-3 00VF|
+|0B|D-4 00VF|
+|0C|D-3 00VF|
+|0D|D-4 00VF|
+|0E|D-3 00VF|
+|0F|D-4 00F0|
+```
+
+### Dodatki
+
+- SHIFT+Ins – wstaw pustą nutę  
+- SHIFT+Del – usuń nutę  
+- CONTROL+P – odtwarzanie od bieżącej pozycji  
+- SHIFT+P – odtwarzanie od 00  
+
+---
+
+# Track (ET – Edytor Tracków)
+
+ET – edytor tracków, najprostsza część MPt.  
+
+- Pierwsza kolumna → numer kroku muzyki  
+- Na każdy kanał przypadają dwie kolumny (pattern + transpozycja)  
+
+### Kody specjalne
+
+- `$FE` – przerwanie muzyki  
+- `$FF` – skok do pozycji podanej w transpozycji (tylko kanał 0)  
+
+### Funkcje
+
+- `CTRL+Ins` – rozsuwanie pozycji muzyki  
+- `CTRL+Del` – kasowanie pozycji  
+- `CTRL+1..4` – włącz/wyłącz kanał 0–3  
+- `CTRL+X` – zamiana kanałów  
+
+### Przykład tracka
+
+```
+|00|01-00|00-00|00-00|00-00|
+|01|01-00|00-00|00-00|00-00|
+|02|01-F9|00-00|00-00|00-00|
+|03|01-F9|00-00|00-00|00-00|
+|04|FF-00|00-00|00-00|00-00|
+|05|FF-FF|FF-FF|FF-FF|FF-FF|
+```
+
+Odtwarzanie: ustaw kursor na 00 i `CTRL+P`.  
+
+---
+
 # Playery
 
 Co dla programistów?  
@@ -162,131 +286,3 @@ JSR PLAYER   ; wyłączenie generatorów
 ```
 
 ---
-
-# Voice (Instrumenty)
-
-Voicy (instrumenty) są najbardziej rozbudowaną częścią MPt.
-
-### Struktura instrumentu
-
-```
-[PS] [PA]
-
-00 -00
-00 1-00
-00 2-00
-00 3-00
-00 4-00
-NA → numery akcentów
-NP → numery parametrów akcentów (0-7)
-WZ → wartości zniekształceń
-```
-
-- **PS** – parametry sterujące instrumentem  
-- **PA** – parametry akcentów  
-- **NA** – numery akcentów  
-- **NP** – numery parametrów akcentów  
-- **WZ** – wartości zniekształceń  
-
-### Akcenty
-
-1. parametr → AUDF  
-2. parametr+AUDF → AUDF  
-3. parametr+(numer nuty) → AUDF  
-4. jak 1 + wyłączenie dzielnika  
-5. jak 1 + rejestr 9-bitowy  
-6. jak 1 + 15 kHz  
-7. parametr AND (losowa) → AUDF  
-
-### Efekty (0–7)
-
-0. łagodne falowanie częstotliwości  
-1. dodanie parametru do AUDF  
-2. opadanie częstotliwości  
-3. szybkie opadanie o kilka nut  
-4. podwyższanie częstotliwości  
-5. szybkie podwyższanie  
-6. głębokie falowanie (efekty dźwiękowe)  
-7. jak 6, ale w większej skali  
-
-Instrument może też korzystać z różnych tablic częstotliwości, ustawiać AUDCTL, wyciszanie, transpozycje (np. tremolo).  
-
----
-
-# Pattern (Patern)
-
-EP – edytor patternów. Klawiatura działa jak klawiatura muzyczna, `SPACE` = pusta nuta.  
-
-### Funkcje
-
-- **Transposition (CTRL+T)** – przesunięcie instrumentu o x półtonów  
-- **Change (CTRL+X)** – zamiana instrumentu  
-- **SHIFT+TAB** – zamiana instrumentu na pozycji  
-
-### Przykład patternu
-
-```
-|00|G-2 00S7|
-|01|G-3 00VF|
-|02|G-2 00VF|
-|03|G-3 00VF|
-|04|A#2 00VF|
-|05|A#3 00VF|
-|06|A#2 00VF|
-|07|A#3 00VF|
-|08|D-3 00VF|
-|09|D-4 00VF|
-|0A|D-3 00VF|
-|0B|D-4 00VF|
-|0C|D-3 00VF|
-|0D|D-4 00VF|
-|0E|D-3 00VF|
-|0F|D-4 00F0|
-```
-
-### Dodatki
-
-- SHIFT+Ins – wstaw pustą nutę  
-- SHIFT+Del – usuń nutę  
-- CONTROL+P – odtwarzanie od bieżącej pozycji  
-- SHIFT+P – odtwarzanie od 00  
-
----
-
-# Track (ET – Edytor Tracków)
-
-ET – edytor tracków, najprostsza część MPt.  
-
-- Pierwsza kolumna → numer kroku muzyki  
-- Na każdy kanał przypadają dwie kolumny (pattern + transpozycja)  
-
-### Kody specjalne
-
-- `$FE` – przerwanie muzyki  
-- `$FF` – skok do pozycji podanej w transpozycji (tylko kanał 0)  
-
-### Funkcje
-
-- `CTRL+Ins` – rozsuwanie pozycji muzyki  
-- `CTRL+Del` – kasowanie pozycji  
-- `CTRL+1..4` – włącz/wyłącz kanał 0–3  
-- `CTRL+X` – zamiana kanałów  
-
-### Przykład tracka
-
-```
-|00|01-00|00-00|00-00|00-00|
-|01|01-00|00-00|00-00|00-00|
-|02|01-F9|00-00|00-00|00-00|
-|03|01-F9|00-00|00-00|00-00|
-|04|FF-00|00-00|00-00|00-00|
-|05|FF-FF|FF-FF|FF-FF|FF-FF|
-```
-
-Odtwarzanie: ustaw kursor na 00 i `CTRL+P`.  
-
----
-
-# Koniec
-
-To jest pełny manual Music Pro Trackera w formacie Markdown.
