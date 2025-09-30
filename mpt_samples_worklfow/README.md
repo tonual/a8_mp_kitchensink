@@ -33,6 +33,7 @@
     - [Player MD1 w assemblerze MADS](#player-md1-w-assemblerze-mads)
     - [Player MD1 w Mad Pascalu](#player-md1-w-mad-pascalu)
 - [Dodatkowe informacje](#dodatkowe-informacje)
+  - [Dłuuugie loopy](#dłuuugie-loopy)
   - [Edytor MPT vs Player niuanse](#edytor-mpt-vs-player-niuanse)
   - [Instrukcja Music Pro Tracker](#instrukcja-music-pro-tracker)
   - [Źródła dobrej jakości sampli](#źródła-dobrej-jakości-sampli)
@@ -507,6 +508,13 @@ mads md1_play.a65 -x -i:ścieżka_katalogu_base_mad_pascala -o:md1_play.xex
 `
 
 ## Dodatkowe informacje
+
+### Dłuuugie loopy
+
+Można. Za cenę, choć ściana brzmienia nawet w marnych 8Khz zachęca do wydatku. Niskie tony, rap.  
+Krótki elaborat z loopem ~2.1 sekundy, 8.7Kb.  
+[wu_tang_clan_.xex](https://github.com/tonual/a8_mp_kitchensink/blob/main/mpt_samples_worklfow/xex/wu_tang_clan.xex)
+
 
 ### Edytor MPT vs Player niuanse 
 
