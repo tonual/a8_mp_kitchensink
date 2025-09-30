@@ -2,8 +2,6 @@
 
 # Spis treści
 
-# Spis treści
-
 - [Wstęp](#wstęp)
   - [POKEY + Sample = ♥](#pokey--sample--)
   - [Ale jak to brzmi?](#ale-jak-to-brzmi)
