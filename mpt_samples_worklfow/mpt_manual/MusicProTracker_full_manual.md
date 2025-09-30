@@ -1,9 +1,5 @@
 # Music Pro Tracker Manual
 
-## Wstęp
-
-Opis układów POKEY, rejestrów oraz podstaw działania (sekcja wprowadzająca z poprzedniej części).
-
 ---
 
 # Voice (Instrumenty)
