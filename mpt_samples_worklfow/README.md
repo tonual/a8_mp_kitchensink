@@ -397,7 +397,7 @@ Istnieją subtelne różnice między playerem MPT a playerem zewnętrznym,
 dlatego linia 01 musi być poprawiona na 
 >ff-00 06-00 06-00, 06-00
 
-[Dowiedz się dlatego](#edytor-mpt-vs-player-niuanse)
+[Dowiedz się dlaczego](#edytor-mpt-vs-player-niuanse)
 
 ### Zapisujemy utwór i wyciągamy z obrazu .atr
 
