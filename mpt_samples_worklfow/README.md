@@ -557,6 +557,6 @@ Gorąco polecam pakiet _Digital Audio Workstation_ w postaci programu Ableton.
 Zestaw, obok __bogatej biblioteki sampli wszelakiej maści a zwłaszcza perkusji, oraz "loopów"   
 posiada liczne narzędzia do tzw "masteringu" i spory wachlarz modułów modyfikacji brzmienia__.   
 Jest sprytny, prosty w obsłudze a jednocześnie zaawansowany i posiada jedynie 2 widoki: aranżacji i kompozycji.   
-Istniej przystępna, podstawowa wersja - Ableton Live Lite (klucz można nabyć za symboliczną kwotę)
+Dostępna jest podstawowa wersja - Ableton Live Lite (klucz można nabyć za symboliczną kwotę)
 
 [Ableteon Live Lite](https://www.ableton.com/en/products/live-lite/)
