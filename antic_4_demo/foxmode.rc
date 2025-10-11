@@ -1,2 +1,0 @@
-CHARSET_RAM_ADDRESS	RCDATA	'scene_g2f_2.fnt'
-VIDEO_RAM_ADDRESS	RCDATA	'scene_g2f_2.scr'

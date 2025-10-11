@@ -57,10 +57,11 @@ Instrument może też korzystać z różnych tablic częstotliwości, ustawiać 
 EP – edytor patternów. Klawiatura działa jak klawiatura muzyczna, `SPACE` = pusta nuta.  
 
 ### Funkcje
-
+-----
 - **Transposition (CTRL+T)** – przesunięcie instrumentu o x półtonów  
 - **Change (CTRL+X)** – zamiana instrumentu  
 - **SHIFT+TAB** – zamiana instrumentu na pozycji  
+- **SHIFT+V** – zamiana głośności instrumentu
 
 ### Przykład patternu
 
