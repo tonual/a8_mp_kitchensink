@@ -13,6 +13,8 @@ Var
   ch: char;
   song_index: byte = 0;
 
+{$r md1_play.rc}
+
 //DOS II+/D Version 6.4 (c) '87 by S.D.
 Function LoadFileToAddr(Const filename: String; addr: word): Boolean;
 
@@ -25,6 +27,7 @@ Var
   totalRead: word;
 
 Begin
+  totalRead := 0;
   writeln('reading file: ',filename);
   Result := false;
 {$I-}
