@@ -1,3 +1,4 @@
+
 Uses crt, sysutils, md1;
 
 Const 
@@ -14,70 +15,92 @@ Var
   song_index: byte = 0;
 
 {$r mptb.rc}
-//md1 player resource
+  //md1 player resource
 
-Procedure RelocateMD1(modul: pointer; new_addr: word);
-Var 
+  Program mpt_relocator;
+
+  Uses crt, sysutils;
+
+
+
+procedure MPT_Relocator(const filename: TString; new_address: cardinal);
+var
+  f: file;
+  buf: array[0..8191] of byte;  // Reduced size, assuming MPT files are small
+  size: word;
   old_add: word;
-  oalength: word;
-  ofs: word = 6;
+  len: word;
+  ofs: word;
+  i: byte;
   tmp: word;
   hlp: word;
-  i: byte;  
-  ph: pointer;
-  nadp: pointer;
+  pt1: pointer;
+  fullname: string;
+begin
 
-Begin  
-  If PWord(modul)^ <> $FFFF Then
-    Begin
-      writeln('Bad file format');
-      Halt;
-    End;
+  ofs := 6;
 
-  old_add := PWord(pointer(word(modul) + 2))^;
-  oalength := PWord(pointer(word(modul) + 4))^ - old_add + 1;  
-  // instruments  
-  For i := 0 To 31 Do
-    Begin
-      tmp := PWord(pointer(word(modul) + ofs + i*2))^;
-      If tmp <> 0 Then
-        Begin
-          hlp := tmp - old_add + new_addr;
-          PWord(pointer(word(modul) + ofs + i*2))^ := hlp;          
-        End;
-    End;  
-  // patterns  
-  For i := 0 To 63 Do
-    Begin
-      tmp := PWord(pointer(word(modul) + ofs + $40 + i*2))^;
-      If tmp <> 0 Then
-        Begin
-          hlp := tmp - old_add + new_addr;
-          PWord(pointer(word(modul) + ofs + $40 + i*2))^ := hlp;          
-        End;
-    End;  
-  // 4 tracks  
-  For i := 0 To 3 Do
-    Begin
-      tmp := PByte(pointer(word(modul) + ofs + $1C0 + i))^ + 
-        PByte(pointer(word(modul) + ofs + $1C4 + i))^ shl 8;
-      If tmp <> 0 Then
-        Begin
-          hlp := tmp - old_add + new_addr;
-          PByte(pointer(word(modul) + ofs + $1C0 + i))^ := Lo(hlp);
-          PByte(pointer(word(modul) + ofs + $1C4 + i))^ := Hi(hlp);          
-        End;
-    End;  
-  
-  // Shift the data down over the header to remove 
-  //the 6-byte Atari DOS header
-  ph := pointer(word(modul) + ofs);  
-  Move(ph^, modul^, oalength);  
-  // Move the relocated modul (without header) to the target address  
-  nadp := pointer(new_addr);
-  Move(modul^, nadp^, oalength);  
+  fullname := Concat('D:', filename);
+  assign(f, fullname);
+  reset(f, 1);
+  blockread(f, buf, sizeof(buf), size);
 
-End;
+  if (size < 6) or ((buf[0]) <> $FF) or ((buf[1]) <> $FF) then begin
+    writeln('Bad file format');
+    close(f);
+    halt;
+  end;
+
+  old_add := buf[2] + buf[3] shl 8;
+  len := (buf[4] + buf[5] shl 8) - old_add + 1;
+  writeln('sizE: ',size);
+  if size < len + 6 then begin
+    writeln('File too small');
+    close(f);
+    halt;
+  end;
+
+  if size > len + 6 then begin
+    writeln('Warning: File has extra bytes at the end. Ignoring them.');
+  end;
+
+  // Relocate instruments (32 pointers at offset 0 in data)
+  for i := 0 to 31 do begin
+    tmp := buf[ofs + i * 2] + buf[ofs + i * 2 + 1] shl 8;
+    if tmp <> 0 then begin
+      hlp := tmp - old_add + new_address;
+      buf[ofs + i * 2] := hlp and $FF;
+      buf[ofs + i * 2 + 1] := hlp shr 8;
+    end;
+  end;
+
+  // Relocate patterns (64 pointers at offset $40 in data)
+  for i := 0 to 63 do begin
+    tmp := buf[ofs + $40 + i * 2] + buf[ofs + $40 + i * 2 + 1] shl 8;
+    if tmp <> 0 then begin
+      hlp := tmp - old_add + new_address;
+      buf[ofs + $40 + i * 2] := hlp and $FF;
+      buf[ofs + $40 + i * 2 + 1] := hlp shr 8;
+    end;
+  end;
+
+  // Relocate tracks (4 pointers: LSBs at $1C0, MSBs at $1C4)
+  for i := 0 to 3 do begin
+    tmp := buf[ofs + $1C0 + i] + buf[ofs + $1C4 + i] shl 8;
+    if tmp <> 0 then begin
+      hlp := tmp - old_add + new_address;
+      buf[ofs + $1C0 + i] := hlp and $FF;
+      buf[ofs + $1C4 + i] := hlp shr 8;
+    end;
+  end;
+
+  // Move the relocated data to the new address (exclude DOS header)
+  pt1 := pointer(new_address);
+  move(buf[ofs], pt1^, len);
+
+  close(f);
+  writeln('relocation of module completed');
+end;
 
 
 //DOS II+/D Version 6.4 (c) '87 by S.D.
@@ -127,11 +150,12 @@ Begin
 
   While song_index < 3 Do
     Begin
+      writeln('3');
       writeln('Loading song ', module_filenames[song_index]);
-      LoadFileToAddr(module_filenames[song_index], module_addr);
-      RelocateMD1(pointer(module_addr), module_addr);    
-      LoadFileToAddr(sample_filenames[song_index], sample_addr);
       
+      MPT_Relocator(module_filenames[song_index], module_addr);
+      LoadFileToAddr(sample_filenames[song_index], sample_addr);
+
       msx.player := pointer(md1_player);
       msx.modul := pointer(module_addr);
       msx.sample := pointer(sample_addr);
