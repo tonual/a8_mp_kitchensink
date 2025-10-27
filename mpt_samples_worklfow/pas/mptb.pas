@@ -1,4 +1,3 @@
-
 Uses crt, sysutils, md1;
 
 Const 
@@ -15,15 +14,8 @@ Var
   song_index: byte = 0;
 
 {$r mptb.rc}
-  //md1 player resource
 
-  Program mpt_relocator;
-
-  Uses crt, sysutils;
-
-
-
-procedure MPT_Relocator(const filename: TString; new_address: cardinal);
+procedure LoadAndRelocate(const filename: TString; new_address: cardinal);
 var
   f: file;
   buf: array[0..8191] of byte;  // Reduced size, assuming MPT files are small
@@ -150,10 +142,8 @@ Begin
 
   While song_index < 3 Do
     Begin
-      writeln('3');
-      writeln('Loading song ', module_filenames[song_index]);
-      
-      MPT_Relocator(module_filenames[song_index], module_addr);
+      writeln('Loading song ', module_filenames[song_index]);      
+      LoadAndRelocate(module_filenames[song_index], module_addr);
       LoadFileToAddr(sample_filenames[song_index], sample_addr);
 
       msx.player := pointer(md1_player);
@@ -166,9 +156,7 @@ Begin
       Until keypressed;
 
       ch := readkey;
-      // Clear key
       msx.stop;
-
       Inc(song_index);
       writeln('Next song ', song_index);
     End;
