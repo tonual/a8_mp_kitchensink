@@ -14,130 +14,86 @@ Var
   ch: char;
   song_index: byte = 0;
 
-{$r mptb.rc}
+procedure LoadAndRelocate(const filename: string; new_address: word);
+const
+  DOS_HDR = 6;
 
-Procedure LoadAndRelocate(Const filename : String; new_address : word);
-{--------------------------------------------------------------------}
-{  Load a .MD1 (Music Pro Tracker) module from disk and relocate it   }
-{  to NEW_ADDRESS exactly the way the MADS macro mpt_relocator.mac   }
-{  does it at compile-time.                                           }
-{--------------------------------------------------------------------}
+var
+  f        : file;
+  read_cnt : word;
+  old_addr : word;
+  data_len : word;
+  ofs      : word;
+  i        : byte;
+  tmp      : word;
+  ptn      : pointer;
+  buffer   : array[0..8191] of byte;
 
-Const 
-  MAX_MODULE = 8192;
-  // 8 KB is more than enough for any .MD1
-  DOS_HDR   = 6;
-  // DOS header size (FFFF …)
-
-Var 
-  f          : file;
-  file_len   : word;
-  // bytes actually read
-  data_len   : word;
-  // length of the module *without* DOS header
-  old_addr   : word;
-  // address stored in the DOS header
-  ofs        : word;
-  // offset of the first module byte
-  i          : byte;
-  tmp16      : word;
-  tmp8       : byte;
-  npt        : pointer;
-
-  // a small buffer that can hold the whole file
-  buffer     : array[0..MAX_MODULE-1] Of byte;
-
-Begin
-  // ----------------------------------------------------------------
-  // 1) Load the binary file (DOS header + module data)
-  // ----------------------------------------------------------------
+begin
   Assign(f, filename);
   Reset(f, 1);
-  // record size = 1 byte
-  file_len := 0;
-  BlockRead(f, buffer, SizeOf(buffer), file_len);
+  read_cnt := 0;
+  BlockRead(f, buffer, SizeOf(buffer), read_cnt);
   Close(f);
 
-  If (file_len < DOS_HDR + 2) Or (buffer[0] <> $FF) Or (buffer[1] <> $FF) Then
-    Begin
-      WriteLn('ERROR: ', filename, ' is not a valid DOS binary file');
-      Halt;
-    End;
+  if (read_cnt < DOS_HDR + 2) or
+     (buffer[0] <> $FF) or (buffer[1] <> $FF) then
+  begin
+    WriteLn('ERROR: ', filename, ' - not a valid DOS binary');
+    Halt;
+  end;
 
-  // ----------------------------------------------------------------
-  // 2) Extract old address and compute module length
-  // ----------------------------------------------------------------
   old_addr := buffer[2] + buffer[3] shl 8;
-  // original load address
-  data_len := buffer[4] + buffer[5] shl 8 - old_addr + 1;
-  // module size without header
+  data_len := (buffer[4] + buffer[5] shl 8) - old_addr + 1;
   ofs      := DOS_HDR;
-  // first module byte
 
-  If file_len <> DOS_HDR + data_len Then
-    Begin
-      WriteLn('ERROR: file size mismatch (corrupted module?)');
-      Halt;
-    End;
+  if read_cnt <> DOS_HDR + data_len then
+  begin
+    WriteLn('ERROR: file size mismatch');
+    Halt;
+  end;
 
-  // ----------------------------------------------------------------
-  // 3) Fix the DOS header so the file can be RUN again
-  // ----------------------------------------------------------------
   buffer[2] := Lo(new_address);
   buffer[3] := Hi(new_address);
   buffer[4] := Lo(new_address + data_len - 1);
   buffer[5] := Hi(new_address + data_len - 1);
 
-  // ----------------------------------------------------------------
-  // 4) Relocate the 32 instrument pointers (offset $0000 … $003F)
-  // ----------------------------------------------------------------
-  For i := 0 To 31 Do
-    Begin
-      tmp16 := buffer[ofs + i*2] + buffer[ofs + i*2 + 1] shl 8;
-      If tmp16 <> 0 Then
-        Begin
-          tmp16 := tmp16 - old_addr + new_address;
-          buffer[ofs + i*2]     := Lo(tmp16);
-          buffer[ofs + i*2 + 1] := Hi(tmp16);
-        End;
-    End;
+  for i := 0 to 31 do
+  begin
+    tmp := buffer[ofs + i*2] + buffer[ofs + i*2 + 1] shl 8;
+    if tmp <> 0 then
+    begin
+      tmp := tmp - old_addr + new_address;
+      buffer[ofs + i*2]     := Lo(tmp);
+      buffer[ofs + i*2 + 1] := Hi(tmp);
+    end;
+  end;
 
-  // ----------------------------------------------------------------
-  // 5) Relocate the 64 pattern pointers (offset $0040 … $00BF)
-  // ----------------------------------------------------------------
-  For i := 0 To 63 Do
-    Begin
-      tmp16 := buffer[ofs + $40 + i*2] + buffer[ofs + $40 + i*2 + 1] shl 8;
-      If tmp16 <> 0 Then
-        Begin
-          tmp16 := tmp16 - old_addr + new_address;
-          buffer[ofs + $40 + i*2]     := Lo(tmp16);
-          buffer[ofs + $40 + i*2 + 1] := Hi(tmp16);
-        End;
-    End;
+  for i := 0 to 63 do
+  begin
+    tmp := buffer[ofs + $40 + i*2] + buffer[ofs + $40 + i*2 + 1] shl 8;
+    if tmp <> 0 then
+    begin
+      tmp := tmp - old_addr + new_address;
+      buffer[ofs + $40 + i*2]     := Lo(tmp);
+      buffer[ofs + $40 + i*2 + 1] := Hi(tmp);
+    end;
+  end;
 
-  // ----------------------------------------------------------------
-  // 6) Relocate the 4 track pointers
-  //     low  bytes : $01C0 … $01C3
-  //     high bytes : $01C4 … $01C7
-  // ----------------------------------------------------------------
-  For i := 0 To 3 Do
-    Begin
-      tmp16 := buffer[ofs + $1C0 + i] + buffer[ofs + $1C4 + i] shl 8;
-      If tmp16 <> 0 Then
-        Begin
-          tmp16 := tmp16 - old_addr + new_address;
-          buffer[ofs + $1C0 + i] := Lo(tmp16);
-          buffer[ofs + $1C4 + i] := Hi(tmp16);
-        End;
-    End;
+  for i := 0 to 3 do
+  begin
+    tmp := buffer[ofs + $1C0 + i] + buffer[ofs + $1C4 + i] shl 8;
+    if tmp <> 0 then
+    begin
+      tmp := tmp - old_addr + new_address;
+      buffer[ofs + $1C0 + i] := Lo(tmp);
+      buffer[ofs + $1C4 + i] := Hi(tmp);
+    end;
+  end;
 
-  // ----------------------------------------------------------------
-  // 7) Copy the relocated module into its final memory location
-  // ----------------------------------------------------------------
-  npt := Pointer(new_address);
-  Move(buffer[ofs],npt^, data_len);
-End;
+  ptn := Pointer(new_address);
+  Move(buffer[ofs], ptn, data_len);
+end;
 
 
 //DOS II+/D Version 6.4 (c) '87 by S.D.
