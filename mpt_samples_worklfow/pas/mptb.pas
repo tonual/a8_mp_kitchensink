@@ -20,6 +20,8 @@ Var
   ch: char;
   song_index: byte = 0;
 
+{$r mptb.rc}
+
 //DOS II+/D Version 6.4 (c) '87 by S.D.
 Procedure LoadAndRelocateMD1(Const filename: String; new_address: word);
 
