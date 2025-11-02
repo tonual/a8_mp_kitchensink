@@ -516,6 +516,7 @@ Krótki elaborat z loopem ~2.1 sekundy, 8.7Kb.
 
 ### Edytor MPT vs Player niuanse 
 
+#### Instrukcja skoku tylko na pierwszym kanale
 Jest tego pewnie sporo, ale chcę się podzielić jednym takim co zasiał ferment.
 Przygotowując muzykę na potrzeby tego przewodnika, wykorzystałem tylko pierwszą pozycję "00". 
 W kolejnej linijce 01, ustawiłem rozkaz skoku z powrotem na pozycję "00", czyli "ff - 00" (zapętlenie grania).
@@ -534,6 +535,10 @@ Jeśli w Track'u jest instrukcja skoku, pozostałe Trac'ki wypełnij pustym patt
 `
 
 <img src="screenshots/niuanse.png" width=500px style="padding:20px">
+
+#### Sample nie na takcie 00
+
+Edytor zagra sample na takcie 00, player już nie.
 
 ### Instrukcja Music Pro Tracker
 
