@@ -1,29 +1,42 @@
+
 Uses crt, sysutils, md1;
 
 Const 
-  ver = '0.106';
-  // md1_player = $520A;
-  // module_addr = $6000;
-  // sample_addr = $7000;
-  md1_player  = $7000;
-  module_addr = $8000;
-  sample_addr = $9000;
-  
-  drive_prefix  = 'D:';
-  file_md1_ext  = '.MD1';
-  file_d15_ext  = '.D15';
-  file_d8_ext   = '.D8 ';
+  ver = '0.107';
+
+  ADDR_PLAYER  = $7000;
+  ADDR_MD1 = $8000;
+  ADDR_SAMPLES = $9000;
+
+  DRIVE   = 'D:';
+  MD1_EXT = '.MD1';
+  D15_EXT = '.D15';
+  D8_EXT  = '.D8 ';
+
+  MAX_BROWSE_ITEMS: byte = 8;
 
 Var 
   msx: TMD1;
   ch: char;
-  song_index: byte = 1;
-  module_filename : array [0..64] of string[64];
+  browse_offset: byte = 0;
   is15Khz : boolean;
+  song_name: string;
 
-{$r mptb.rc} //md1player resource
+{$r mptb.rc}
+  //md1player resource
 
-Function BaseName(fname: TString): string;
+Procedure WriteInverse(s: String);
+
+Var 
+  i: byte;
+Begin
+  For i := 1 To length(s) Do
+    write(chr(byte(s[i]) + 128));
+  write(chr(155));
+End;
+
+
+Function GetFileBase(fname: TString): string;
 
 Var 
   i: byte;
@@ -38,7 +51,7 @@ Begin
   // no dot found
 End;
 
-  //DOS II+/D Version 6.4 (c) '87 by S.D.
+//DOS II+/D Version 6.4 (c) '87 by S.D.
 Procedure LoadAndRelocateMD1(Const filename: String; new_address: word);
 
 Const 
@@ -154,69 +167,82 @@ Begin
 End;
 
 
-Procedure GetSongs;
+Procedure Browse;
 
 Var 
-Info : TSearchRec;
-bname: TString;
-
-i: byte;
+  Info : TSearchRec;
+  i: byte;
+  shown : byte;
 
 Begin
+  shown := 0;
+  i := 0;
 
   If FindFirst('D:*.MD1', faAnyFile, Info) = 0 Then   // '*.MD1  ?
+
     Begin
       Repeat
-        //writeln(Info.Name,' | ',hexStr(Info.Attr,2));
-        
-        bname := BaseName(Info.Name);       
-        module_filename[i] := bname;
+
         Inc(i);
-      Until FindNext(Info) <> 0;
+        If (i < browse_offset) Then
+          Begin
+          End
+
+        Else
+          Begin
+            Inc(shown);
+            If (shown = 4) Then
+              Begin
+                song_name := GetFileBase(Info.Name);
+                WriteInverse(song_name);
+              End
+
+            Else
+              Begin
+                writeln(Info.Name);
+              End;
+          End;
+
+      Until (FindNext(Info) <> 0) or (shown = MAX_BROWSE_ITEMS);
+      //Until (FindNext(Info) <> 0) Or (shown > MAX_BROWSE_ITEMS);
+
       FindClose(Info);
+
     End;
 End;
 
-Procedure PrintSongs;
+
+
+
+Procedure LoadSong;
 
 Var 
-  i : byte;
+  sample_file : string;
+  song_file : string;
+  fullname : string;
 
 Begin
-  For i := 0 To High(module_filename) Do
+
+  writeln('Now Loading: ',song_name);
+
+  is15Khz := true;
+  song_file   := Concat(song_name, MD1_EXT);
+  sample_file := Concat(song_name, D15_EXT);
+
+  fullname := Concat(DRIVE, sample_file);
+  If (FileExists(fullname) <> true) Then
     Begin
-      if (module_filename[i] <> '') Then
-        Begin
-        writeln(i, ' | ',module_filename[i])
-      End;
+      writeln('not 15Khz');
+      sample_file := Concat(song_name, D8_EXT);
+      is15Khz := false;
     End;
-  writeln('---------------');
+
+  fullname := Concat(DRIVE, song_file);
+  LoadAndRelocateMD1(fullname, ADDR_MD1);
+  fullname := Concat(DRIVE, sample_file);
+  LoadFileToAddr(fullname, ADDR_SAMPLES);
 End;
 
-procedure LoadSong;
-Var
-sample_file : string;
-song_file : string;
-fullname : string;
-
-Begin
-      is15Khz := true;   
-      song_file   := Concat(module_filename[song_index], file_md1_ext);
-      sample_file := Concat(module_filename[song_index], file_d15_ext);
-      
-      fullname := Concat(drive_prefix, sample_file);
-      if (FileExists(fullname) <> true) Then
-        Begin
-          writeln('not 15Khz');
-          sample_file := Concat(module_filename[song_index], file_d8_ext);
-          is15Khz := false;
-        End;
-      
-      fullname := Concat(drive_prefix, song_file);      
-      LoadAndRelocateMD1(fullname, module_addr);
-      fullname := Concat(drive_prefix, sample_file);      
-      LoadFileToAddr(fullname, sample_addr);            
-End;
 
 Procedure vbl;
 interrupt;
@@ -230,21 +256,39 @@ Begin
   writeln('ver. ',ver);
 
   SetIntVec(iVBL, @vbl);
-  GetSongs();
-  PrintSongs();
+  Browse();
 
-  While song_index <> 8 Do
+  While browse_offset < 255 Do
     Begin
 
-      writeln('Take number (9 to quit):');
-      ch := readkey;
-      song_index := Ord(ch) - 48;
-      writeln('Now Loading: ',module_filename[song_index]);      
-      LoadSong();      
+      Repeat
+        ch := ReadKey;  { get second code for special keys }
+        ClrScr;
 
-      msx.player  := pointer(md1_player);
-      msx.modul   := pointer(module_addr);
-      msx.sample  := pointer(sample_addr);
+        Case ord(ch) Of 
+          45:
+              Begin
+                Dec(browse_offset);
+                Browse();
+              End;
+          61:
+              Begin
+                Inc(browse_offset);
+                Browse();
+              End;
+          155:
+
+               Else writeln('char: ', ord(ch));
+        End;
+      Until ord(ch) = 155;
+      //'E' like exit
+
+
+      LoadSong();
+
+      msx.player  := pointer(ADDR_PLAYER);
+      msx.modul   := pointer(ADDR_MD1);
+      msx.sample  := pointer(ADDR_SAMPLES);
       msx.init;
 
       Repeat
@@ -252,6 +296,7 @@ Begin
       Until keypressed;
 
       msx.stop;
+
       writeln('stopped , press any key');
     End;
   Repeat
