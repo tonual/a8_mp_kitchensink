@@ -5,14 +5,14 @@ Const
   // md1_player = $520A;
   // module_addr = $6000;
   // sample_addr = $7000;
-  md1_player = $7000;
+  md1_player  = $7000;
   module_addr = $8000;
   sample_addr = $9000;
   
-  drive_prefix = 'D:';
-  file_md1_ext = '.MD1';
-  file_d15_ext = '.D15';
-  file_d8_ext = '.D8';
+  drive_prefix  = 'D:';
+  file_md1_ext  = '.MD1';
+  file_d15_ext  = '.D15';
+  file_d8_ext   = '.D8 ';
 
 Var 
   msx: TMD1;
@@ -159,7 +159,7 @@ Procedure GetSongs;
 Var 
 Info : TSearchRec;
 bname: TString;
-rname: string;
+
 i: byte;
 
 Begin
@@ -169,9 +169,8 @@ Begin
       Repeat
         //writeln(Info.Name,' | ',hexStr(Info.Attr,2));
         
-        bname := BaseName(Info.Name);
-        rname := Concat(drive_prefix,bname);
-        module_filename[i] := rname;
+        bname := BaseName(Info.Name);       
+        module_filename[i] := bname;
         Inc(i);
       Until FindNext(Info) <> 0;
       FindClose(Info);
@@ -198,6 +197,7 @@ procedure LoadSong;
 Var
 sample_file : string;
 song_file : string;
+fullname : string;
 
 Begin
       is15Khz := true;
@@ -205,16 +205,22 @@ Begin
       song_file   := Concat(module_filename[song_index], file_md1_ext);
       sample_file := Concat(module_filename[song_index], file_d15_ext);
       
-      if (FileExists(sample_file) <> true) Then
+      fullname := Concat(drive_prefix, sample_file);
+      if (FileExists(fullname) <> true) Then
         Begin
           writeln('not 15Khz');
           sample_file := Concat(module_filename[song_index], file_d8_ext);
           is15Khz := false;
         End;
-      writeln('Loading: ', song_index, module_filename[song_index]);
-
-      LoadAndRelocateMD1(song_file, module_addr);
-      LoadFileToAddr(sample_file, sample_addr);      
+      
+      fullname := Concat(drive_prefix, song_file);
+      writeln('loading ',fullname);
+      ch := readkey;
+      LoadAndRelocateMD1(fullname, module_addr);
+      fullname := Concat(drive_prefix, sample_file);
+      writeln('loading ',fullname);
+      ch := readkey;
+      LoadFileToAddr(fullname, sample_addr);      
       
 End;
 
