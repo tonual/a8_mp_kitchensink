@@ -200,8 +200,7 @@ song_file : string;
 fullname : string;
 
 Begin
-      is15Khz := true;
-   
+      is15Khz := true;   
       song_file   := Concat(module_filename[song_index], file_md1_ext);
       sample_file := Concat(module_filename[song_index], file_d15_ext);
       
@@ -213,15 +212,10 @@ Begin
           is15Khz := false;
         End;
       
-      fullname := Concat(drive_prefix, song_file);
-      writeln('loading ',fullname);
-      ch := readkey;
+      fullname := Concat(drive_prefix, song_file);      
       LoadAndRelocateMD1(fullname, module_addr);
-      fullname := Concat(drive_prefix, sample_file);
-      writeln('loading ',fullname);
-      ch := readkey;
-      LoadFileToAddr(fullname, sample_addr);      
-      
+      fullname := Concat(drive_prefix, sample_file);      
+      LoadFileToAddr(fullname, sample_addr);            
 End;
 
 Procedure vbl;
@@ -245,7 +239,7 @@ Begin
       writeln('Take number (9 to quit):');
       ch := readkey;
       song_index := Ord(ch) - 48;
-      
+      writeln('Now Loading: ',module_filename[song_index]);      
       LoadSong();      
 
       msx.player  := pointer(md1_player);
