@@ -1,4 +1,3 @@
-
 Uses crt, sysutils, md1;
 
 Const 
@@ -6,37 +5,38 @@ Const
   // md1_player = $520A;
   // module_addr = $6000;
   // sample_addr = $7000;
-  md1_player = $6000;
-  module_addr = $7000;
-  sample_addr = $8000;
-
-  module_filenames : array [0..7] Of string = (
-                                               'D:FILTERED_CHORD.MD1',
-                                               'D:TECHNO.MD1',
-                                               'D:INSANITY.MD1',
-                                               'D:WTC.MD1',
-                                               'D:TRANSIL.MD1',
-                                               'D:TNL4.MD1',
-                                               'D:BLUE3.MD1',
-                                               'D:BLUEZONE.MD1'
-                                              );
-  sample_filenames : array [0..7] Of string = (
-                                               'D:FILTERED_CHORD.D15',
-                                               'D:TECHNO.D15',
-                                               'D:INSANITY.D15',
-                                               'D:WTC.D8',
-                                               'D:TRANSIL.D15',
-                                               'D:TNL4.D15',
-                                               'D:BLUE3.D15',
-                                               'D:BLUE3.D15'
-                                              );
+  md1_player = $7000;
+  module_addr = $8000;
+  sample_addr = $9000;
+  
+  drive_prefix = 'D:';
+  file_md1_ext = '.MD1';
+  file_d15_ext = '.D15';
+  file_d8_ext = '.D8';
 
 Var 
   msx: TMD1;
   ch: char;
   song_index: byte = 1;
+  module_filename : array [0..64] of string[64];
+  is15Khz : boolean;
 
-{$r mptb.rc}
+{$r mptb.rc} //md1player resource
+
+Function BaseName(fname: TString): string;
+
+Var 
+  i: byte;
+Begin
+  For i := Length(fname) Downto 1 Do
+    If fname[i] = '.' Then
+      Begin
+        Result := Copy(fname, 1, i - 1);
+        Exit;
+      End;
+  Result := fname;
+  // no dot found
+End;
 
   //DOS II+/D Version 6.4 (c) '87 by S.D.
 Procedure LoadAndRelocateMD1(Const filename: String; new_address: word);
@@ -154,19 +154,69 @@ Begin
 End;
 
 
+Procedure GetSongs;
+
+Var 
+Info : TSearchRec;
+bname: TString;
+rname: string;
+i: byte;
+
+Begin
+
+  If FindFirst('D:*.MD1', faAnyFile, Info) = 0 Then   // '*.MD1  ?
+    Begin
+      Repeat
+        //writeln(Info.Name,' | ',hexStr(Info.Attr,2));
+        
+        bname := BaseName(Info.Name);
+        rname := Concat(drive_prefix,bname);
+        module_filename[i] := rname;
+        Inc(i);
+      Until FindNext(Info) <> 0;
+      FindClose(Info);
+    End;
+End;
+
 Procedure PrintSongs;
 
 Var 
   i : byte;
 
 Begin
-  For i := 0 To High(module_filenames) Do
+  For i := 0 To High(module_filename) Do
     Begin
-      writeln(i, ' | ',module_filenames[i])
+      if (module_filename[i] <> '') Then
+        Begin
+        writeln(i, ' | ',module_filename[i])
+      End;
     End;
   writeln('---------------');
 End;
 
+procedure LoadSong;
+Var
+sample_file : string;
+song_file : string;
+
+Begin
+      is15Khz := true;
+   
+      song_file   := Concat(module_filename[song_index], file_md1_ext);
+      sample_file := Concat(module_filename[song_index], file_d15_ext);
+      
+      if (FileExists(sample_file) <> true) Then
+        Begin
+          writeln('not 15Khz');
+          sample_file := Concat(module_filename[song_index], file_d8_ext);
+          is15Khz := false;
+        End;
+      writeln('Loading: ', song_index, module_filename[song_index]);
+
+      LoadAndRelocateMD1(song_file, module_addr);
+      LoadFileToAddr(sample_file, sample_addr);      
+      
+End;
 
 Procedure vbl;
 interrupt;
@@ -180,26 +230,25 @@ Begin
   writeln('ver. ',ver);
 
   SetIntVec(iVBL, @vbl);
+  GetSongs();
   PrintSongs();
 
-  While song_index <>8 Do
+  While song_index <> 8 Do
     Begin
-      
+
       writeln('Take number (9 to quit):');
       ch := readkey;
       song_index := Ord(ch) - 48;
-            
-      writeln('Loading: ', song_index, module_filenames[song_index]);
-      LoadAndRelocateMD1(module_filenames[song_index], module_addr);      
-      LoadFileToAddr(sample_filenames[song_index], sample_addr);
       
-      msx.player := pointer(md1_player);
-      msx.modul := pointer(module_addr);
-      msx.sample := pointer(sample_addr);
+      LoadSong();      
+
+      msx.player  := pointer(md1_player);
+      msx.modul   := pointer(module_addr);
+      msx.sample  := pointer(sample_addr);
       msx.init;
 
       Repeat
-        msx.digi(true);
+        msx.digi(is15Khz);
       Until keypressed;
 
       msx.stop;
