@@ -3,6 +3,10 @@ Uses crt, sysutils, md1;
 
 Const 
   ver = '0.107';
+  
+  COLBG   = $2C6;   // 710 – background / border
+  COLPF1  = $2C5;   // 709 – playfield 1 (normal text)
+  COLPF2  = $2C8;   // 712 – playf
 
   ADDR_PLAYER  = $7000;
   ADDR_MD1 = $8000;
@@ -17,6 +21,7 @@ Const
   MAX_COLUMN_ITEMS: byte = 18;
   COLUMN_WIDTH = 9;
   COLUMN_MARGIN = 3;
+  ROW_MARGIN = 3;
 
 Var 
   msx: TMD1;
@@ -179,8 +184,9 @@ Var
   song_name : string;
   
 Begin  
-  row := 1;
-  col := COLUMN_MARGIN;  
+  row := ROW_MARGIN;
+  col := COLUMN_MARGIN;
+
   If FindFirst('D:*.MD1', faAnyFile, Info) = 0 Then   // '*.MD1  ?
 
     Begin
@@ -192,7 +198,7 @@ Begin
 
         if row > MAX_COLUMN_ITEMS Then
           Begin
-            row := 0;
+            row := ROW_MARGIN;
             col := col + COLUMN_MARGIN + COLUMN_WIDTH;
           End;
 
@@ -246,6 +252,9 @@ End;
 Begin
   ClrScr;
   CursorOff;
+  Poke(COLBG, $04);          // background black
+  Poke(COLPF1, $2A);         // border black (same as background)  
+  Poke(COLPF2, $00);// orange = hue 2, luminance 10 → $2A  (2*16 + 10)
   
   writeln('ver. ',ver);
 
