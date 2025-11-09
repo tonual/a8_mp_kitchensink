@@ -1,4 +1,4 @@
-
+{$DEFINE BASICOFF}
 Uses crt, sysutils, md1;
 
 Const 
@@ -13,7 +13,10 @@ Const
   D15_EXT = '.D15';
   D8_EXT  = '.D8 ';
 
-  MAX_BROWSE_ITEMS: byte = 8;
+  MAX_BROWSE_ITEMS: byte = 63;
+  MAX_COLUMN_ITEMS: byte = 18;
+  COLUMN_WIDTH = 9;
+  COLUMN_MARGIN = 3;
 
 Var 
   msx: TMD1;
@@ -21,6 +24,7 @@ Var
   browse_offset: byte = 0;
   is15Khz : boolean;
   song_name: string;
+  
 
 {$r mptb.rc}
   //md1player resource
@@ -166,46 +170,33 @@ Begin
   Close(f);
 End;
 
-
+//40x24
 Procedure Browse;
 
 Var 
   Info : TSearchRec;
-  i: byte;
-  shown : byte;
-
-Begin
-  shown := 0;
-  i := 0;
-
+  row,col : byte;
+  song_name : string;
+  
+Begin  
+  row := 1;
+  col := COLUMN_MARGIN;  
   If FindFirst('D:*.MD1', faAnyFile, Info) = 0 Then   // '*.MD1  ?
 
     Begin
-      Repeat
+      Repeat        
+        GotoXY(col,row);        
+        song_name := GetFileBase(Info.Name);                    
+        writeln(song_name);
+        Inc(row);
 
-        Inc(i);
-        If (i < browse_offset) Then
+        if row > MAX_COLUMN_ITEMS Then
           Begin
-          End
-
-        Else
-          Begin
-            Inc(shown);
-            If (shown = 4) Then
-              Begin
-                song_name := GetFileBase(Info.Name);
-                WriteInverse(song_name);
-              End
-
-            Else
-              Begin
-                writeln(Info.Name);
-              End;
+            row := 0;
+            col := col + COLUMN_MARGIN + COLUMN_WIDTH;
           End;
 
-      Until (FindNext(Info) <> 0) or (shown = MAX_BROWSE_ITEMS);
-      //Until (FindNext(Info) <> 0) Or (shown > MAX_BROWSE_ITEMS);
-
+      Until (FindNext(Info) <> 0) or (shown = MAX_BROWSE_ITEMS);      
       FindClose(Info);
 
     End;
@@ -253,9 +244,13 @@ End;
 
 
 Begin
+  ClrScr;
+  CursorOff;
+  
   writeln('ver. ',ver);
 
   SetIntVec(iVBL, @vbl);
+  
   Browse();
 
   While browse_offset < 255 Do
@@ -263,23 +258,31 @@ Begin
 
       Repeat
         ch := ReadKey;  { get second code for special keys }
-        ClrScr;
+        // ClrScr;
 
-        Case ord(ch) Of 
-          45:
-              Begin
-                Dec(browse_offset);
-                Browse();
-              End;
-          61:
-              Begin
-                Inc(browse_offset);
-                Browse();
-              End;
-          155:
+        // Case ord(ch) Of 
+        //   45://up arrow
+        //       Begin
+        //         Dec(browse_offset);
+        //         Browse();
+        //       End;
+        //   61://down arrow
+        //       Begin
+        //         Inc(browse_offset);
+        //         Browse();
+        //       End;
+        //   42://right arrow
+        //       Begin
+             
+        //       End;
+        //   43://left arrow
+        //     Begin
+             
+        //       End;
+        //   155:
 
-               Else writeln('char: ', ord(ch));
-        End;
+        //        Else writeln('char: ', ord(ch));
+        //End;
       Until ord(ch) = 155;
       //'E' like exit
 
