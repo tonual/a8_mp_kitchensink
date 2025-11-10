@@ -12,29 +12,30 @@ Const
   COLPF2  = $2C8;
   // 712 – playf
   //memory alloc
-  ADDR_PLAYER   = $6690;
+  ADDR_PLAYER   = $6777;
   ADDR_MD1      = $76A0;
   ADDR_SAMPLES  = $86A0;
-  //files
+  //file extensions
   DRIVE   = 'D:';
   MD1_EXT = '.MD1';
   D15_EXT = '.D15';
   D8_EXT  = '.D8 ';
-  //browser
-  MAX_BROWSE_ITEMS: byte = 63;
-  MAX_COLUMN_ITEMS: byte = 18;
-  COLUMN_WIDTH  = 8;
-  COLUMN_MARGIN = 2;
-  ROW_MARGIN    = 4;
+  //browser setup
+  COL_ITEMS_CNT: byte   = 18;
+  MAX_BROWSE_ITEMS: byte = COL_ITEMS_CNT * 4;
+  //4 columns max
+  COL_WIDTH   = 8;
+  COL_MARGIN  = 2;
+  ROW_MARGIN  = 4;
 
 Var 
   msx: TMD1;
   is15Khz : boolean;
-
   song_name: string;
   song_selected: boolean;
   browse_col : byte;
   browse_row : byte;
+  col_cnt_on_page: byte;
 
 {$r mptb.rc}
 
@@ -92,7 +93,6 @@ Begin
         Exit;
       End;
   Result := fname;
-  // no dot found
 End;
 
 
@@ -186,7 +186,6 @@ Begin
 End;
 
 
-//DOS II+/D Version 6.4 (c) '87 by S.D.
 Procedure LoadFileToAddr(Const filename: String; addr: word);
 
 Var 
@@ -194,10 +193,8 @@ Var
   p: pointer;
   buf: array [0..255] Of byte;
   bytesRead: word;
-  totalRead: word;
 
 Begin
-  totalRead := 0;
   Assign(f, filename);
   Reset(f, 1);
 
@@ -210,8 +207,8 @@ Begin
   Close(f);
 End;
 
-//40x24
-Procedure Listing;
+
+Procedure ListPageOfFiles;
 
 Var 
   Info : TSearchRec;
@@ -219,8 +216,9 @@ Var
   song_name : string;
 
 Begin
+  col_cnt_on_page := 0;
   row := ROW_MARGIN;
-  col := COLUMN_MARGIN;
+  col := COL_MARGIN;
 
   If FindFirst('D:*.MD1', faAnyFile, Info) = 0 Then   // '*.MD1  ?
 
@@ -231,10 +229,11 @@ Begin
         writeln(song_name);
         Inc(row);
 
-        If row > MAX_COLUMN_ITEMS Then
+        If row > COL_ITEMS_CNT Then
           Begin
             row := ROW_MARGIN;
-            col := col + COLUMN_MARGIN + COLUMN_WIDTH;
+            col := col + COL_MARGIN + COL_WIDTH;
+            Inc(col_cnt_on_page);
           End;
 
       Until (FindNext(Info) <> 0) Or (shown = MAX_BROWSE_ITEMS);
@@ -252,15 +251,14 @@ Var
   fullname : string;
 
 Begin
-  GotoXY(ROW_MARGIN, MAX_COLUMN_ITEMS + 2);
-  WriteInverse(Concat('Now Loading: ',song_name));
 
-  is15Khz := true; //try .d15 ext
+  is15Khz := true;
+  //try .d15 ext
   song_file   := Concat(song_name, MD1_EXT);
   sample_file := Concat(song_name, D15_EXT);
   fullname := Concat(DRIVE, sample_file);
   If (FileExists(fullname) <> true) Then //if not,then it is .d8 ext
-    Begin     
+    Begin
       sample_file := Concat(song_name, D8_EXT);
       is15Khz := false;
     End;
@@ -269,7 +267,6 @@ Begin
   LoadAndRelocateMD1(fullname, ADDR_MD1);
   fullname := Concat(DRIVE, sample_file);
   LoadFileToAddr(fullname, ADDR_SAMPLES);
-  writeln(' ');
 End;
 
 
@@ -285,8 +282,18 @@ Procedure Browse();
 
 Var 
   ch: char;
+
+Var current_col: byte;
 Begin
 
+  If song_selected Then //restore song name from inverse
+    Begin
+      GotoXY(browse_col + 1, browse_row);
+      writeln(song_name);
+    End;
+
+  song_selected := false;
+  //put cursor
   GotoXY(browse_col, browse_row);
   WriteInverse('>');
   ch := ReadKey;
@@ -300,28 +307,35 @@ Begin
         End;
     61: //down
         Begin
-          If browse_row < MAX_COLUMN_ITEMS Then Inc(browse_row);
+          If browse_row < COL_ITEMS_CNT Then Inc(browse_row);
         End;
     42: //right
         Begin
-          If browse_col < 3 * (COLUMN_WIDTH + COLUMN_MARGIN) Then
+          current_col := browse_col Div (COL_WIDTH + COL_MARGIN);
+          If current_col < col_cnt_on_page Then
             Begin
-              browse_col := browse_col + COLUMN_MARGIN + COLUMN_WIDTH;
+              browse_col := browse_col + COL_MARGIN + COL_WIDTH;
             End;
         End;
     43: //left
         Begin
-          If browse_col > COLUMN_MARGIN + 1 Then
+          If browse_col > COL_MARGIN + 1 Then
             Begin
-              browse_col := browse_col - (COLUMN_MARGIN + COLUMN_WIDTH);
+              browse_col := browse_col - (COL_MARGIN + COL_WIDTH);
             End;
         End;
-    155: //enter
+    155: //ENTER - sleltect song, make inversed
          Begin
            song_name := ReadStrAt(browse_col + 1, browse_row);
            song_selected := true;
+           GotoXY(browse_col + 1, browse_row);
+           WriteInverse(song_name);
          End;
   End;
+  //BLIP
+  Sound(0, 255, 10, 8);
+  Delay(50);
+  Sound(0, 0, 0, 0);
 End;
 
 
@@ -331,15 +345,15 @@ Begin
   CursorOff;
   Poke(COLBG, $04);
   Poke(COLPF1, $2A);
-  Poke(COLPF2, $00);
-  browse_col := COLUMN_MARGIN - 1;
+  Poke(COLPF2, $04);
+  browse_col := COL_MARGIN - 1;
   browse_row := ROW_MARGIN;
   song_selected := false;
   writeln('ver. ',ver);
 
   SetIntVec(iVBL, @vbl);
 
-  Listing();
+  ListPageOfFiles();
 
   While true Do
     Begin
@@ -349,17 +363,15 @@ Begin
       Until song_selected = true;
 
       LoadSong();
+
+      //play until keypress
       msx.player  := pointer(ADDR_PLAYER);
       msx.modul   := pointer(ADDR_MD1);
       msx.sample  := pointer(ADDR_SAMPLES);
       msx.init;
-
       Repeat
         msx.digi(is15Khz);
       Until keypressed;
-
       msx.stop;
-      song_selected := false;
-
     End;
 End.
