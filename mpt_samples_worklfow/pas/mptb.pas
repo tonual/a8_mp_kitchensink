@@ -12,9 +12,9 @@ Const
   COLPF2  = $2C8;
   // 712 – playf
   //memory alloc
-  ADDR_PLAYER   = $7000;
-  ADDR_MD1      = $8000;
-  ADDR_SAMPLES  = $9000;
+  ADDR_PLAYER   = $6690;
+  ADDR_MD1      = $76A0;
+  ADDR_SAMPLES  = $86A0;
   //files
   DRIVE   = 'D:';
   MD1_EXT = '.MD1';
@@ -252,7 +252,7 @@ Var
   fullname : string;
 
 Begin
-  GotoXY(ROW_MARGIN, MAX_COLUMN_ITEMS+1);
+  GotoXY(ROW_MARGIN, MAX_COLUMN_ITEMS + 2);
   WriteInverse(Concat('Now Loading: ',song_name));
 
   is15Khz := true; //try .d15 ext
@@ -269,6 +269,7 @@ Begin
   LoadAndRelocateMD1(fullname, ADDR_MD1);
   fullname := Concat(DRIVE, sample_file);
   LoadFileToAddr(fullname, ADDR_SAMPLES);
+  writeln(' ');
 End;
 
 
@@ -348,7 +349,6 @@ Begin
       Until song_selected = true;
 
       LoadSong();
-
       msx.player  := pointer(ADDR_PLAYER);
       msx.modul   := pointer(ADDR_MD1);
       msx.sample  := pointer(ADDR_SAMPLES);
