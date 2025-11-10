@@ -37,7 +37,7 @@ Var
   cursor_row : byte;
   col_cnt_on_page: byte;
   current_col : byte;
-
+  
 {$r mptb.rc}
 
 Function ReadStrAt(X, Y: Byte): string;
@@ -274,7 +274,13 @@ End;
 Procedure vbl;
 interrupt;
 Begin
+
   msx.play;
+ 
+  If keypressed() Then
+    Begin                    
+      msx.stop;      
+    End;
   asm { jmp xitvbv };
 End;
 
@@ -294,10 +300,12 @@ Begin
     End;
 
   song_selected := false;
-  GotoXY(cursor_col, cursor_row);//selector
+  GotoXY(cursor_col, cursor_row);
+  //selector
   WriteInverse('>');
   ch := ReadKey;
-  GotoXY(cursor_col, cursor_row);//selector off
+  GotoXY(cursor_col, cursor_row);
+  //selector off
   writeln(' ');
 
   Case ord(ch) Of 
@@ -310,7 +318,7 @@ Begin
           If cursor_row < COL_ITEMS_CNT Then Inc(cursor_row);
         End;
     42: //right
-        Begin          
+        Begin
           If current_col < col_cnt_on_page Then
             Begin
               cursor_col := cursor_col + COL_MARGIN + COL_WIDTH;
@@ -349,32 +357,31 @@ Begin
   Poke(COLPF2, $02);
   cursor_col := COL_MARGIN - 1;
   cursor_row := ROW_MARGIN;
-  current_col:= 1;
+  current_col := 1;
   song_selected := false;
-  GotoXY(4, 21);WriteInverse(Concat('v ',ver));
+  GotoXY(4, 21);
+  WriteInverse(Concat('v ',ver));
 
   SetIntVec(iVBL, @vbl);
 
   ListPageOfFiles();
 
   While true Do
-    Begin
-
+    Begin      
       Repeat
         Browse();
       Until song_selected = true;
 
       LoadSong();
-
+      
       //play until keypress
       msx.player  := pointer(ADDR_PLAYER);
       msx.modul   := pointer(ADDR_MD1);
       msx.sample  := pointer(ADDR_SAMPLES);
-      msx.init;
-      Repeat
-        msx.digi(is15Khz);
-      Until keypressed;
+      msx.init;     
       
-      msx.stop;
+            
+      msx.digi(is15Khz);
+                        
     End;
 End.
