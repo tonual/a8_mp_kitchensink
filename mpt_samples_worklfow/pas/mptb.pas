@@ -382,6 +382,6 @@ Begin
       
             
       msx.digi(is15Khz);
-                        
+      msx.stop();                  
     End;
 End.
