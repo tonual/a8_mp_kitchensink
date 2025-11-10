@@ -1,38 +1,73 @@
 {$DEFINE BASICOFF}
+
 Uses crt, sysutils, md1;
 
 Const 
   ver = '0.107';
-  
-  COLBG   = $2C6;   // 710 – background / border
-  COLPF1  = $2C5;   // 709 – playfield 1 (normal text)
-  COLPF2  = $2C8;   // 712 – playf
-
-  ADDR_PLAYER  = $7000;
-  ADDR_MD1 = $8000;
-  ADDR_SAMPLES = $9000;
-
+  //colors
+  COLBG   = $2C6;
+  // 710 – background / border
+  COLPF1  = $2C5;
+  // 709 – playfield 1 (normal text)  
+  COLPF2  = $2C8;
+  // 712 – playf
+  //memory alloc
+  ADDR_PLAYER   = $7000;
+  ADDR_MD1      = $8000;
+  ADDR_SAMPLES  = $9000;
+  //files
   DRIVE   = 'D:';
   MD1_EXT = '.MD1';
   D15_EXT = '.D15';
   D8_EXT  = '.D8 ';
-
+  //browser
   MAX_BROWSE_ITEMS: byte = 63;
   MAX_COLUMN_ITEMS: byte = 18;
-  COLUMN_WIDTH = 9;
-  COLUMN_MARGIN = 3;
-  ROW_MARGIN = 3;
+  COLUMN_WIDTH  = 8;
+  COLUMN_MARGIN = 2;
+  ROW_MARGIN    = 4;
 
 Var 
   msx: TMD1;
-  ch: char;
-  browse_offset: byte = 0;
   is15Khz : boolean;
+
   song_name: string;
-  
+  song_selected: boolean;
+  browse_col : byte;
+  browse_row : byte;
 
 {$r mptb.rc}
-  //md1player resource
+
+Function ReadStrAt(X, Y: Byte): string;
+
+Var 
+  ScreenBase : Word;
+  Offset     : Word;
+  Pos        : Byte;
+  Internal   : Byte;
+  ResultStr  : string;
+
+Begin
+  ResultStr := '';
+  ScreenBase := DPeek(88);
+  Offset     := (Y-1) * 40 + (X-1);
+  Pos := 0;
+  While (X-1 + Pos < 40) Do
+    Begin
+      Internal := Peek(ScreenBase + Offset + Pos);
+      If Internal < 128 Then
+        Internal := Internal + 32
+      Else
+        Internal := Internal - 128;
+      If Chr(Internal) = ' ' Then
+        break;
+      ResultStr := Concat(ResultStr, Chr(Internal));
+      Inc(Pos);
+    End;
+
+  ReadStrAt := ResultStr;
+End;
+
 
 Procedure WriteInverse(s: String);
 
@@ -60,7 +95,7 @@ Begin
   // no dot found
 End;
 
-//DOS II+/D Version 6.4 (c) '87 by S.D.
+
 Procedure LoadAndRelocateMD1(Const filename: String; new_address: word);
 
 Const 
@@ -176,39 +211,37 @@ Begin
 End;
 
 //40x24
-Procedure Browse;
+Procedure Listing;
 
 Var 
   Info : TSearchRec;
   row,col : byte;
   song_name : string;
-  
-Begin  
+
+Begin
   row := ROW_MARGIN;
   col := COLUMN_MARGIN;
 
   If FindFirst('D:*.MD1', faAnyFile, Info) = 0 Then   // '*.MD1  ?
 
     Begin
-      Repeat        
-        GotoXY(col,row);        
-        song_name := GetFileBase(Info.Name);                    
+      Repeat
+        GotoXY(col,row);
+        song_name := GetFileBase(Info.Name);
         writeln(song_name);
         Inc(row);
 
-        if row > MAX_COLUMN_ITEMS Then
+        If row > MAX_COLUMN_ITEMS Then
           Begin
             row := ROW_MARGIN;
             col := col + COLUMN_MARGIN + COLUMN_WIDTH;
           End;
 
-      Until (FindNext(Info) <> 0) or (shown = MAX_BROWSE_ITEMS);      
+      Until (FindNext(Info) <> 0) Or (shown = MAX_BROWSE_ITEMS);
       FindClose(Info);
 
     End;
 End;
-
-
 
 
 Procedure LoadSong;
@@ -219,17 +252,15 @@ Var
   fullname : string;
 
 Begin
+  GotoXY(ROW_MARGIN, MAX_COLUMN_ITEMS+1);
+  WriteInverse(Concat('Now Loading: ',song_name));
 
-  writeln('Now Loading: ',song_name);
-
-  is15Khz := true;
+  is15Khz := true; //try .d15 ext
   song_file   := Concat(song_name, MD1_EXT);
   sample_file := Concat(song_name, D15_EXT);
-
   fullname := Concat(DRIVE, sample_file);
-  If (FileExists(fullname) <> true) Then
-    Begin
-      writeln('not 15Khz');
+  If (FileExists(fullname) <> true) Then //if not,then it is .d8 ext
+    Begin     
       sample_file := Concat(song_name, D8_EXT);
       is15Khz := false;
     End;
@@ -249,52 +280,72 @@ Begin
 End;
 
 
+Procedure Browse();
+
+Var 
+  ch: char;
 Begin
+
+  GotoXY(browse_col, browse_row);
+  WriteInverse('>');
+  ch := ReadKey;
+  GotoXY(browse_col, browse_row);
+  writeln(' ');
+
+  Case ord(ch) Of 
+    45: //up
+        Begin
+          If browse_row > 0 Then Dec(browse_row);
+        End;
+    61: //down
+        Begin
+          If browse_row < MAX_COLUMN_ITEMS Then Inc(browse_row);
+        End;
+    42: //right
+        Begin
+          If browse_col < 3 * (COLUMN_WIDTH + COLUMN_MARGIN) Then
+            Begin
+              browse_col := browse_col + COLUMN_MARGIN + COLUMN_WIDTH;
+            End;
+        End;
+    43: //left
+        Begin
+          If browse_col > COLUMN_MARGIN + 1 Then
+            Begin
+              browse_col := browse_col - (COLUMN_MARGIN + COLUMN_WIDTH);
+            End;
+        End;
+    155: //enter
+         Begin
+           song_name := ReadStrAt(browse_col + 1, browse_row);
+           song_selected := true;
+         End;
+  End;
+End;
+
+
+Begin
+  //UI
   ClrScr;
   CursorOff;
-  Poke(COLBG, $04);          // background black
-  Poke(COLPF1, $2A);         // border black (same as background)  
-  Poke(COLPF2, $00);// orange = hue 2, luminance 10 → $2A  (2*16 + 10)
-  
+  Poke(COLBG, $04);
+  Poke(COLPF1, $2A);
+  Poke(COLPF2, $00);
+  browse_col := COLUMN_MARGIN - 1;
+  browse_row := ROW_MARGIN;
+  song_selected := false;
   writeln('ver. ',ver);
 
   SetIntVec(iVBL, @vbl);
-  
-  Browse();
 
-  While browse_offset < 255 Do
+  Listing();
+
+  While true Do
     Begin
 
       Repeat
-        ch := ReadKey;  { get second code for special keys }
-        // ClrScr;
-
-        // Case ord(ch) Of 
-        //   45://up arrow
-        //       Begin
-        //         Dec(browse_offset);
-        //         Browse();
-        //       End;
-        //   61://down arrow
-        //       Begin
-        //         Inc(browse_offset);
-        //         Browse();
-        //       End;
-        //   42://right arrow
-        //       Begin
-             
-        //       End;
-        //   43://left arrow
-        //     Begin
-             
-        //       End;
-        //   155:
-
-        //        Else writeln('char: ', ord(ch));
-        //End;
-      Until ord(ch) = 155;
-      //'E' like exit
-
+        Browse();
+      Until song_selected = true;
 
       LoadSong();
 
@@ -308,9 +359,7 @@ Begin
       Until keypressed;
 
       msx.stop;
+      song_selected := false;
 
-      writeln('stopped , press any key');
     End;
-  Repeat
-  Until keypressed;
 End.
