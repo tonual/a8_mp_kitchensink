@@ -12,7 +12,7 @@ Const
   COLPF2  = $2C8;
   // 712 – playf
   //memory alloc
-  ADDR_PLAYER   = $6777;
+  ADDR_PLAYER   = $6800;
   ADDR_MD1      = $76A0;
   ADDR_SAMPLES  = $86A0;
   //file extensions
@@ -21,7 +21,7 @@ Const
   D15_EXT = '.D15';
   D8_EXT  = '.D8 ';
   //browser setup
-  COL_ITEMS_CNT: byte   = 18;
+  COL_ITEMS_CNT: byte   = 15;
   MAX_BROWSE_ITEMS: byte = COL_ITEMS_CNT * 4;
   //4 columns max
   COL_WIDTH   = 8;
@@ -33,9 +33,10 @@ Var
   is15Khz : boolean;
   song_name: string;
   song_selected: boolean;
-  browse_col : byte;
-  browse_row : byte;
+  cursor_col : byte;
+  cursor_row : byte;
   col_cnt_on_page: byte;
+  current_col : byte;
 
 {$r mptb.rc}
 
@@ -288,53 +289,53 @@ Begin
 
   If song_selected Then //restore song name from inverse
     Begin
-      GotoXY(browse_col + 1, browse_row);
+      GotoXY(cursor_col + 1, cursor_row);
       writeln(song_name);
     End;
 
   song_selected := false;
-  //put cursor
-  GotoXY(browse_col, browse_row);
+  GotoXY(cursor_col, cursor_row);//selector
   WriteInverse('>');
   ch := ReadKey;
-  GotoXY(browse_col, browse_row);
+  GotoXY(cursor_col, cursor_row);//selector off
   writeln(' ');
 
   Case ord(ch) Of 
     45: //up
         Begin
-          If browse_row > 0 Then Dec(browse_row);
+          If cursor_row > ROW_MARGIN Then Dec(cursor_row);
         End;
     61: //down
         Begin
-          If browse_row < COL_ITEMS_CNT Then Inc(browse_row);
+          If cursor_row < COL_ITEMS_CNT Then Inc(cursor_row);
         End;
     42: //right
-        Begin
-          current_col := browse_col Div (COL_WIDTH + COL_MARGIN);
+        Begin          
           If current_col < col_cnt_on_page Then
             Begin
-              browse_col := browse_col + COL_MARGIN + COL_WIDTH;
+              cursor_col := cursor_col + COL_MARGIN + COL_WIDTH;
+              Inc(current_col);
             End;
         End;
     43: //left
         Begin
-          If browse_col > COL_MARGIN + 1 Then
+          If cursor_col > COL_MARGIN + 1 Then
             Begin
-              browse_col := browse_col - (COL_MARGIN + COL_WIDTH);
+              cursor_col := cursor_col - (COL_MARGIN + COL_WIDTH);
+              Dec(current_col);
             End;
         End;
     155: //ENTER - sleltect song, make inversed
          Begin
-           song_name := ReadStrAt(browse_col + 1, browse_row);
+           song_name := ReadStrAt(cursor_col + 1, cursor_row);
            song_selected := true;
-           GotoXY(browse_col + 1, browse_row);
+           GotoXY(cursor_col + 1, cursor_row);
            WriteInverse(song_name);
          End;
   End;
   //BLIP
-  Sound(0, 255, 10, 8);
-  Delay(50);
+  Sound(0, 255, 10, 4);
+  Delay(20);
   Sound(0, 0, 0, 0);
 End;
 
@@ -343,13 +344,14 @@ Begin
   //UI
   ClrScr;
   CursorOff;
-  Poke(COLBG, $04);
+  Poke(COLBG, $02);
   Poke(COLPF1, $2A);
-  Poke(COLPF2, $04);
-  browse_col := COL_MARGIN - 1;
-  browse_row := ROW_MARGIN;
+  Poke(COLPF2, $02);
+  cursor_col := COL_MARGIN - 1;
+  cursor_row := ROW_MARGIN;
+  current_col:= 1;
   song_selected := false;
-  writeln('ver. ',ver);
+  GotoXY(4, 21);WriteInverse(Concat('v ',ver));
 
   SetIntVec(iVBL, @vbl);
 
@@ -372,6 +374,7 @@ Begin
       Repeat
         msx.digi(is15Khz);
       Until keypressed;
+      
       msx.stop;
     End;
 End.
