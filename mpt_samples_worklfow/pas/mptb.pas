@@ -21,7 +21,7 @@ Const
   D15_EXT = '.D15';
   D8_EXT  = '.D8 ';
   //browser setup
-  COL_ITEMS_CNT: byte   = 15;
+  COL_ITEMS_CNT: byte   = 14;
   MAX_BROWSE_ITEMS: byte = COL_ITEMS_CNT * 4;
   //4 columns max
   COL_WIDTH   = 8;
@@ -36,7 +36,6 @@ Var
   cursor_col : byte;
   cursor_row : byte;
   col_cnt_on_page: byte;
-  current_col : byte;
 
 {$r mptb.rc}
 
@@ -314,7 +313,7 @@ Begin
         End;
     42: //right
         Begin
-          If current_col < col_cnt_on_page Then
+          If (current_col + 1) < col_cnt_on_page Then
             Begin
               cursor_col := cursor_col + COL_MARGIN + COL_WIDTH;
               Inc(current_col);
@@ -352,7 +351,6 @@ Begin
   Poke(COLPF2, $02);
   cursor_col := COL_MARGIN - 1;
   cursor_row := ROW_MARGIN;
-  current_col := 1;
   song_selected := false;
   GotoXY(4, 21);
   WriteInverse(Concat('v ',ver));
