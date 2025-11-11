@@ -1,1 +1,5 @@
 /mkatr mpt_digi_collection.atr -b +ph bwdos/xbw130.dos +p bwdos/startup.bat output/mptb.xex ../song/1-channel-digi/*
+
+
+BEWE DOS
+max 92 per dir
