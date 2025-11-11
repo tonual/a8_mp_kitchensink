@@ -313,7 +313,7 @@ Begin
         End;
     42: //right
         Begin
-          If (current_col + 1) < col_cnt_on_page Then
+          If current_col  < col_cnt_on_page Then
             Begin
               cursor_col := cursor_col + COL_MARGIN + COL_WIDTH;
               Inc(current_col);
