@@ -37,7 +37,7 @@ Var
   cursor_row : byte;
   col_cnt_on_page: byte;
   current_col : byte;
-  
+
 {$r mptb.rc}
 
 Function ReadStrAt(X, Y: Byte): string;
@@ -274,13 +274,8 @@ End;
 Procedure vbl;
 interrupt;
 Begin
-
   msx.play;
- 
-  If keypressed() Then
-    Begin                    
-      msx.stop;      
-    End;
+  If keypressed() Then msx.stop;    
   asm { jmp xitvbv };
 End;
 
@@ -289,8 +284,8 @@ Procedure Browse();
 
 Var 
   ch: char;
+  current_col: byte;
 
-Var current_col: byte;
 Begin
 
   If song_selected Then //restore song name from inverse
@@ -349,7 +344,7 @@ End;
 
 
 Begin
-  //UI
+  //initialize
   ClrScr;
   CursorOff;
   Poke(COLBG, $02);
@@ -361,27 +356,21 @@ Begin
   song_selected := false;
   GotoXY(4, 21);
   WriteInverse(Concat('v ',ver));
-
   SetIntVec(iVBL, @vbl);
 
+  //list/browse/play songs
   ListPageOfFiles();
-
   While true Do
-    Begin      
+    Begin
       Repeat
-        Browse();
+        Browse()
       Until song_selected = true;
-
       LoadSong();
-      
-      //play until keypress
       msx.player  := pointer(ADDR_PLAYER);
       msx.modul   := pointer(ADDR_MD1);
       msx.sample  := pointer(ADDR_SAMPLES);
-      msx.init;     
-      
-            
+      msx.init;
       msx.digi(is15Khz);
-      msx.stop();                  
+      msx.stop();
     End;
 End.
