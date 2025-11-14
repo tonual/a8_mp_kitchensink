@@ -1,43 +1,77 @@
 {$DEFINE BASICOFF}
+{$DEFINE ROMOFF} 
 
 Uses crt, sysutils, md1;
 
 Const 
   ver = '0.107';
   //colors
-  COLBG   = $2C6;
-  // 710 – background / border
-  COLPF1  = $2C5;
-  // 709 – playfield 1 (normal text)  
-  COLPF2  = $2C8;
-  // 712 – playf
-  //memory alloc
-  ADDR_PLAYER   = $6800;
+  COLBG   = $2C6;  
+  COLPF1  = $2C5;  
+  COLPF2  = $2C8;  
+  //memory
+  ADDR_PLAYER   = $69A0;
   ADDR_MD1      = $76A0;
   ADDR_SAMPLES  = $86A0;
-  //file extensions
+  //files
   DRIVE   = 'D:';
   MD1_EXT = '.MD1';
   D15_EXT = '.D15';
   D8_EXT  = '.D8 ';
-  //browser setup
+  //browser
   COL_ITEMS_CNT: byte   = 14;
-  MAX_BROWSE_ITEMS: byte = COL_ITEMS_CNT * 4;
-  //4 columns max
+  MAX_BROWSE_ITEMS: byte = COL_ITEMS_CNT * 4;  
   COL_WIDTH   = 8;
   COL_MARGIN  = 2;
   ROW_MARGIN  = 4;
+  //gfx
+  CHARSET_ADDR = $B800; //$B400          // (must be *1024) custom characters adress pointer
+  CHAR_GREATER = 30;  // '>' code
 
 Var 
+  //player
   msx: TMD1;
   is15Khz : boolean;
-  song_name: string;
+  song_name: string;  
+  //browser
   song_selected: boolean;
   cursor_col : byte;
   cursor_row : byte;
   col_cnt_on_page: byte;
+  //gfx
+  chbas: byte absolute $D409;  // CHBAS register (ANTIC register - default characters address)
+  charset: array [0..7] of byte absolute CHARSET_ADDR;
+  star_def: array [0..7] of byte = (
+    $10,  //   X   
+    $38,  //  XXX  
+    $7C,  // XXXXX 
+    $FE,  //XXXXXXX
+    $fe,  // XXXXX 
+    $fe,  //  XXX  
+    $fe,  //   X   
+    $fe   //       
+  );  // Simple 5-arm star-like shape (adjust as needed for better visuals)
 
 {$r mptb.rc}
+
+procedure init_custom_charset;
+var
+  i: byte;
+  offset: word;
+begin
+  // Copy the built-in ROM font ($E000–$E3FF) to RAM buffer 
+  Move(pointer($E000), @charset, 1024);
+
+  // Replace '>' glyph
+  offset := CHAR_GREATER * 8;
+  for i := 0 to 7 do
+    charset[offset + i] := star_def[i];
+
+  // Switch ANTIC to use our charset
+  
+  Poke($2F4, Hi(CHARSET_ADDR));  // Tell OS our font is the "official" one
+  chbas := Hi(CHARSET_ADDR);
+end;
 
 Function ReadStrAt(X, Y: Byte): string;
 
@@ -46,7 +80,7 @@ Var
   Offset     : Word;
   Pos        : Byte;
   Internal   : Byte;
-  ResultStr  : string;
+  ResultStr  : string;  
 
 Begin
   ResultStr := '';
@@ -296,7 +330,10 @@ Begin
   song_selected := false;
   GotoXY(cursor_col, cursor_row);
   //selector
-  WriteInverse('>');
+  //WriteInverse('>');  
+    
+  writeln('>');
+    
   ch := ReadKey;
   GotoXY(cursor_col, cursor_row);
   //selector off
@@ -353,7 +390,12 @@ Begin
   cursor_row := ROW_MARGIN;
   song_selected := false;
   GotoXY(4, 21);
-  WriteInverse(Concat('v ',ver));
+  init_custom_charset;
+  
+  writeln(Concat('>',ver));
+  
+  
+
   SetIntVec(iVBL, @vbl);
 
   //list/browse/play songs
