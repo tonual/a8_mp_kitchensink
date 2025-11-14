@@ -24,10 +24,9 @@ Const
   COL_WIDTH   = 8;
   COL_MARGIN  = 2;
   ROW_MARGIN  = 4;
-  //gfx
-  CHARSET_ADDR = $B800; //$B400          // (must be *1024) custom characters adress pointer
-  CHAR_GREATER = 30;  // '>' code
-
+  //custpm font
+  CHARSET_ADDR = $B800; //$B400          // (must be *1024) custom characters adress pointer (12Kb after samples addr)
+  
 Var 
   //player
   msx: TMD1;
@@ -38,40 +37,11 @@ Var
   cursor_col : byte;
   cursor_row : byte;
   col_cnt_on_page: byte;
-  //gfx
-  chbas: byte absolute $D409;  // CHBAS register (ANTIC register - default characters address)
-  charset: array [0..7] of byte absolute CHARSET_ADDR;
-  star_def: array [0..7] of byte = (
-    $10,  //   X   
-    $38,  //  XXX  
-    $7C,  // XXXXX 
-    $FE,  //XXXXXXX
-    $fe,  // XXXXX 
-    $fe,  //  XXX  
-    $fe,  //   X   
-    $fe   //       
-  );  // Simple 5-arm star-like shape (adjust as needed for better visuals)
+  //default characterset address
+  addr_char_base: byte absolute $D409;
+  
 
 {$r mptb.rc}
-
-procedure init_custom_charset;
-var
-  i: byte;
-  offset: word;
-begin
-  // Copy the built-in ROM font ($E000–$E3FF) to RAM buffer 
-  Move(pointer($E000), @charset, 1024);
-
-  // Replace '>' glyph
-  offset := CHAR_GREATER * 8;
-  for i := 0 to 7 do
-    charset[offset + i] := star_def[i];
-
-  // Switch ANTIC to use our charset
-  
-  Poke($2F4, Hi(CHARSET_ADDR));  // Tell OS our font is the "official" one
-  chbas := Hi(CHARSET_ADDR);
-end;
 
 Function ReadStrAt(X, Y: Byte): string;
 
@@ -383,19 +353,20 @@ Begin
   //initialize
   ClrScr;
   CursorOff;
+  //custom font
+  Poke($2F4, Hi(CHARSET_ADDR));  //Tell ANTIC our font is the "official" one
+  addr_char_base := Hi(CHARSET_ADDR);//characterset is now here
+  //colors
   Poke(COLBG, $02);
   Poke(COLPF1, $2A);
   Poke(COLPF2, $02);
+  //cursor
   cursor_col := COL_MARGIN - 1;
   cursor_row := ROW_MARGIN;
   song_selected := false;
-  GotoXY(4, 21);
-  init_custom_charset;
   
-  writeln(Concat('>',ver));
-  
-  
-
+  GotoXY(4, 21);  
+  writeln(Concat('>',ver));   
   SetIntVec(iVBL, @vbl);
 
   //list/browse/play songs

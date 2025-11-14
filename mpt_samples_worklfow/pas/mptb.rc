@@ -1,2 +1,3 @@
 ;MD1 player
 ADDR_PLAYER	MD1PLAY
+CHARSET_ADDR rcdata 'digicol.fnt'
