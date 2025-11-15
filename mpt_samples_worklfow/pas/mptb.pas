@@ -1,16 +1,16 @@
 {$DEFINE BASICOFF}
-{$DEFINE ROMOFF} 
+{$DEFINE ROMOFF}
 
 Uses crt, sysutils, md1;
 
 Const 
   ver = '0.107';
   //colors
-  COLBG   = $2C6;  
-  COLPF1  = $2C5;  
-  COLPF2  = $2C8;  
+  COLBG   = $2C6;
+  COLPF1  = $2C5;
+  COLPF2  = $2C8;
   //memory
-  ADDR_PLAYER   = $69A0;
+  ADDR_PLAYER   = $6888;
   ADDR_MD1      = $76A0;
   ADDR_SAMPLES  = $86A0;
   //files
@@ -19,19 +19,21 @@ Const
   D15_EXT = '.D15';
   D8_EXT  = '.D8 ';
   //browser
-  COL_ITEMS_CNT: byte   = 14;
-  MAX_BROWSE_ITEMS: byte = COL_ITEMS_CNT * 4;  
+  COL_ITEMS_CNT = 22;
+  MAX_BROWSE_ITEMS = COL_ITEMS_CNT * 4;
   COL_WIDTH   = 8;
   COL_MARGIN  = 2;
   ROW_MARGIN  = 4;
   //custpm font
-  CHARSET_ADDR = $B800; //$B400          // (must be *1024) custom characters adress pointer (12Kb after samples addr)
-  
+  CHARSET_ADDR = $B800;
+  // (must be *1024) custom characters adress pointer (12Kb after samples addr)
+
+
 Var 
   //player
   msx: TMD1;
   is15Khz : boolean;
-  song_name: string;  
+  song_name: string;
   //browser
   song_selected: boolean;
   cursor_col : byte;
@@ -39,7 +41,7 @@ Var
   col_cnt_on_page: byte;
   //default characterset address
   addr_char_base: byte absolute $D409;
-  
+
 
 {$r mptb.rc}
 
@@ -50,7 +52,7 @@ Var
   Offset     : Word;
   Pos        : Byte;
   Internal   : Byte;
-  ResultStr  : string;  
+  ResultStr  : string;
 
 Begin
   ResultStr := '';
@@ -278,7 +280,7 @@ Procedure vbl;
 interrupt;
 Begin
   msx.play;
-  If keypressed() Then msx.stop;    
+  If keypressed() Then msx.stop;
   asm { jmp xitvbv };
 End;
 
@@ -299,16 +301,11 @@ Begin
 
   song_selected := false;
   GotoXY(cursor_col, cursor_row);
-  //selector
-  //WriteInverse('>');  
-    
-  writeln('>');
-    
+  writeln('>');  
   ch := ReadKey;
   GotoXY(cursor_col, cursor_row);
   //selector off
   writeln(' ');
-
   Case ord(ch) Of 
     45: //up
         Begin
@@ -348,26 +345,67 @@ Begin
   Sound(0, 0, 0, 0);
 End;
 
+Procedure DrawArnament();
+
+Var 
+  c, startChar: byte;
+  ch: char;
+  scrB: word;
+  r0,r1 : word;
+  offsetx: byte;
+
+
+Begin
+  offsetx := 25;
+
+
+  scrB := DPeek(88);
+  startChar := 64;
+
+  r0 := scrB + 15 * 40 + offsetx;
+  r1 := scrB + 23 * 40;
+
+  While r0 <= r1 Do
+    Begin
+      For c := 0 To 7 Do
+        Begin
+          Poke(r0 + c, startChar);
+          Inc(startChar);
+        End;
+      //ch := readkey();
+      Inc(r0, 40);
+    End;
+
+
+End;
+
 
 Begin
   //initialize
   ClrScr;
   CursorOff;
   //custom font
-  Poke($2F4, Hi(CHARSET_ADDR));  //Tell ANTIC our font is the "official" one
-  addr_char_base := Hi(CHARSET_ADDR);//characterset is now here
+  Poke($2F4, Hi(CHARSET_ADDR));
+  //Tell ANTIC our font is the "official" one
+  addr_char_base := Hi(CHARSET_ADDR);
+  //characterset is now here
   //colors
-  Poke(COLBG, $02);
-  Poke(COLPF1, $2A);
+  Poke(COLBG, $2a);
+  Poke(COLPF1, $02);
   Poke(COLPF2, $02);
   //cursor
   cursor_col := COL_MARGIN - 1;
   cursor_row := ROW_MARGIN;
   song_selected := false;
-  
-  GotoXY(4, 21);  
-  writeln(Concat('>',ver));   
+
+  DrawArnament();
+
+
+  // GotoXY(4, 21);
+  // writeln(Concat('>',ver));
+
   SetIntVec(iVBL, @vbl);
+
 
   //list/browse/play songs
   ListPageOfFiles();
