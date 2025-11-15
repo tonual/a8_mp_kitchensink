@@ -9,8 +9,8 @@ Const
   COLBG   = $2C6;
   COLPF1  = $2C5;
   COLPF2  = $2C8;
-  //memory
-  ADDR_PLAYER   = $6888;
+  //MPT memory 
+  ADDR_PLAYER   = $6897;
   ADDR_MD1      = $76A0;
   ADDR_SAMPLES  = $86A0;
   //files
@@ -19,15 +19,16 @@ Const
   D15_EXT = '.D15';
   D8_EXT  = '.D8 ';
   //browser
-  COL_ITEMS_CNT = 22;
+  COL_ITEMS_CNT = 21;
   MAX_BROWSE_ITEMS = COL_ITEMS_CNT * 4;
   COL_WIDTH   = 8;
   COL_MARGIN  = 2;
   ROW_MARGIN  = 4;
-  //custpm font
-  CHARSET_ADDR = $B800;
-  // (must be *1024) custom characters adress pointer (12Kb after samples addr)
-
+  //charset
+  CHARSET_ADDR = $B800; // (must be *1024) custom characters adress pointer (12Kb after samples addr)
+  //ornament 
+  ORNAMENT_COL = 28;
+  ORNAMENT_ROW = 15;
 
 Var 
   //player
@@ -41,7 +42,6 @@ Var
   col_cnt_on_page: byte;
   //default characterset address
   addr_char_base: byte absolute $D409;
-
 
 {$r mptb.rc}
 
@@ -348,22 +348,18 @@ End;
 Procedure DrawArnament();
 
 Var 
-  c, startChar: byte;
-  ch: char;
+  c, startChar: byte;  
   scrB: word;
   r0,r1 : word;
   offsetx: byte;
 
-
 Begin
-  offsetx := 25;
-
-
+  
   scrB := DPeek(88);
   startChar := 64;
 
-  r0 := scrB + 15 * 40 + offsetx;
-  r1 := scrB + 23 * 40;
+  r0 := scrB + ORNAMENT_ROW * 40 + ORNAMENT_COL;
+  r1 := scrB + (ORNAMENT_ROW + 8) * 40;
 
   While r0 <= r1 Do
     Begin
@@ -371,12 +367,9 @@ Begin
         Begin
           Poke(r0 + c, startChar);
           Inc(startChar);
-        End;
-      //ch := readkey();
+        End;      
       Inc(r0, 40);
     End;
-
-
 End;
 
 
@@ -390,8 +383,8 @@ Begin
   addr_char_base := Hi(CHARSET_ADDR);
   //characterset is now here
   //colors
-  Poke(COLBG, $2a);
-  Poke(COLPF1, $02);
+  Poke(COLBG, $02);
+  Poke(COLPF1, $2a);
   Poke(COLPF2, $02);
   //cursor
   cursor_col := COL_MARGIN - 1;
@@ -400,9 +393,8 @@ Begin
 
   DrawArnament();
 
-
-  // GotoXY(4, 21);
-  // writeln(Concat('>',ver));
+  GotoXY(1, 1);
+  WriteInverse('POKEY DIGITALS');
 
   SetIntVec(iVBL, @vbl);
 
