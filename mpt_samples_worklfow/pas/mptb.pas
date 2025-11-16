@@ -3,14 +3,14 @@
 
 Uses crt, sysutils, md1;
 
-Const 
-  ver = '0.107';
+Const   
+  TITLE = 'POKEY DIGITALS VOL 1';
   //colors
   COLBG   = $2C6;
   COLPF1  = $2C5;
   COLPF2  = $2C8;
   //MPT memory 
-  ADDR_PLAYER   = $6897;
+  ADDR_PLAYER   = $68AB;
   ADDR_MD1      = $76A0;
   ADDR_SAMPLES  = $86A0;
   //files
@@ -25,7 +25,7 @@ Const
   COL_MARGIN  = 2;
   ROW_MARGIN  = 4;
   //charset
-  CHARSET_ADDR = $B800; // (must be *1024) custom characters adress pointer (12Kb after samples addr)
+  CHARSET_ADDR = $B800; // custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
   //ornament 
   ORNAMENT_COL = 28;
   ORNAMENT_ROW = 15;
@@ -42,6 +42,7 @@ Var
   col_cnt_on_page: byte;
   //default characterset address
   addr_char_base: byte absolute $D409;
+  scrB: word;
 
 {$r mptb.rc}
 
@@ -129,8 +130,7 @@ Begin
   //sanity checks
   If (read_cnt < DOS_HDR + 2) Or
      (buffer[0] <> $FF) Or (buffer[1] <> $FF) Then
-    Begin
-      WriteLn('ERROR: ', filename, ' - not a valid DOS binary!');
+    Begin      
       Halt;
     End;
 
@@ -140,8 +140,7 @@ Begin
   ofs      := DOS_HDR;
 
   If read_cnt <> DOS_HDR + data_len Then
-    Begin
-      WriteLn('ERROR: file size mismatch');
+    Begin      
       Halt;
     End;
   //Patch the DOS header for the new address
@@ -241,13 +240,12 @@ Begin
             col := col + COL_MARGIN + COL_WIDTH;
             Inc(col_cnt_on_page);
           End;
-
-      Until (FindNext(Info) <> 0) Or (shown = MAX_BROWSE_ITEMS);
+      
+      Until FindNext(Info) <> 0;
       FindClose(Info);
 
     End;
 End;
-
 
 Procedure LoadSong;
 
@@ -268,10 +266,10 @@ Begin
       sample_file := Concat(song_name, D8_EXT);
       is15Khz := false;
     End;
-
+  
   fullname := Concat(DRIVE, song_file);
   LoadAndRelocateMD1(fullname, ADDR_MD1);
-  fullname := Concat(DRIVE, sample_file);
+  fullname := Concat(DRIVE, sample_file);  
   LoadFileToAddr(fullname, ADDR_SAMPLES);
 End;
 
@@ -289,7 +287,7 @@ Procedure Browse();
 
 Var 
   ch: char;
-  current_col: byte;
+  offset: Word;
 
 Begin
 
@@ -300,48 +298,50 @@ Begin
     End;
 
   song_selected := false;
-  GotoXY(cursor_col, cursor_row);
-  writeln('>');  
+
+  GotoXY(cursor_col + 1, cursor_row);
+  song_name := ReadStrAt(cursor_col + 1, cursor_row);
+  WriteInverse(song_name);
+  
   ch := ReadKey;
-  GotoXY(cursor_col, cursor_row);
-  //selector off
-  writeln(' ');
+  GotoXY(cursor_col + 1, cursor_row);  
+  writeln(song_name);
+  
   Case ord(ch) Of 
     45: //up
         Begin
           If cursor_row > ROW_MARGIN Then Dec(cursor_row);
         End;
     61: //down
-        Begin
-          If cursor_row < COL_ITEMS_CNT Then Inc(cursor_row);
+        Begin          
+          offset := cursor_row * 40 + cursor_col;
+          If Peek(scrB + offset) <> 0 Then Inc(cursor_row);        
         End;
     42: //right
         Begin
-          If current_col  < col_cnt_on_page Then
+          offset := (cursor_row - 1) * 40 + (cursor_col + COL_MARGIN + COL_WIDTH);
+          If Peek(scrB + offset) <> 0 Then
             Begin
-              cursor_col := cursor_col + COL_MARGIN + COL_WIDTH;
-              Inc(current_col);
+              cursor_col := cursor_col + COL_MARGIN + COL_WIDTH;             
             End;
         End;
     43: //left
         Begin
           If cursor_col > COL_MARGIN + 1 Then
             Begin
-              cursor_col := cursor_col - (COL_MARGIN + COL_WIDTH);
-              Dec(current_col);
+              cursor_col := cursor_col - (COL_MARGIN + COL_WIDTH);            
             End;
         End;
     155: //ENTER - sleltect song, make inversed
-         Begin
-           song_name := ReadStrAt(cursor_col + 1, cursor_row);
+         Begin           
            song_selected := true;
            GotoXY(cursor_col + 1, cursor_row);
            WriteInverse(song_name);
          End;
   End;
   //BLIP
-  Sound(0, 255, 10, 4);
-  Delay(20);
+  Sound(0, 255, 10, 3);
+  Delay(12);  
   Sound(0, 0, 0, 0);
 End;
 
@@ -349,13 +349,13 @@ Procedure DrawArnament();
 
 Var 
   c, startChar: byte;  
-  scrB: word;
+  
   r0,r1 : word;
   offsetx: byte;
 
 Begin
   
-  scrB := DPeek(88);
+
   startChar := 64;
 
   r0 := scrB + ORNAMENT_ROW * 40 + ORNAMENT_COL;
@@ -377,11 +377,11 @@ Begin
   //initialize
   ClrScr;
   CursorOff;
+  scrB := DPeek(88);
   //custom font
   Poke($2F4, Hi(CHARSET_ADDR));
   //Tell ANTIC our font is the "official" one
   addr_char_base := Hi(CHARSET_ADDR);
-  //characterset is now here
   //colors
   Poke(COLBG, $02);
   Poke(COLPF1, $2a);
@@ -393,8 +393,8 @@ Begin
 
   DrawArnament();
 
-  GotoXY(1, 1);
-  WriteInverse('POKEY DIGITALS');
+  GotoXY(0,0);
+  WriteInverse(TITLE);
 
   SetIntVec(iVBL, @vbl);
 
