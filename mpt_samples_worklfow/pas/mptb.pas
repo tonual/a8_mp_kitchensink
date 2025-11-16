@@ -5,12 +5,13 @@ Uses crt, sysutils, md1;
 
 Const   
   TITLE = 'POKEY DIGITALS VOL 1';
+  INSTR = 'INSTR: USE ARROWS & ENTER';
   //colors
   COLBG   = $2C6;
   COLPF1  = $2C5;
   COLPF2  = $2C8;
   //MPT memory 
-  ADDR_PLAYER   = $68AB;
+  ADDR_PLAYER   = $6971;
   ADDR_MD1      = $76A0;
   ADDR_SAMPLES  = $86A0;
   //files
@@ -26,6 +27,7 @@ Const
   ROW_MARGIN  = 4;
   //charset
   CHARSET_ADDR = $B800; // custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
+  ORNA_ADDR = $BA00; // custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
   //ornament 
   ORNAMENT_COL = 28;
   ORNAMENT_ROW = 15;
@@ -43,6 +45,7 @@ Var
   //default characterset address
   addr_char_base: byte absolute $D409;
   scrB: word;
+  ptr : pointer;
 
 {$r mptb.rc}
 
@@ -255,7 +258,7 @@ Var
   fullname : string;
 
 Begin
-
+  Poke(65,0); //silence i/o noise
   is15Khz := true;
   //try .d15 ext
   song_file   := Concat(song_name, MD1_EXT);
@@ -279,7 +282,10 @@ interrupt;
 Begin
   msx.play;
   If keypressed() Then msx.stop;
-  asm { jmp xitvbv };
+  asm 
+  {     
+    jmp xitvbv 
+  };
 End;
 
 
@@ -345,22 +351,19 @@ Begin
   Sound(0, 0, 0, 0);
 End;
 
-Procedure DrawArnament();
+Procedure DrawOrnament();
 
 Var 
-  c, startChar: byte;  
-  
+  c, startChar: byte;    
   r0,r1 : word;
   offsetx: byte;
 
-Begin
-  
-
+Begin    
+  WriteInverse(TITLE);    
+  //ornament gfx
   startChar := 64;
-
   r0 := scrB + ORNAMENT_ROW * 40 + ORNAMENT_COL;
   r1 := scrB + (ORNAMENT_ROW + 8) * 40;
-
   While r0 <= r1 Do
     Begin
       For c := 0 To 7 Do
@@ -370,11 +373,15 @@ Begin
         End;      
       Inc(r0, 40);
     End;
+    //line    
+    For c := 0 To 27 Do Poke(scrB + 840 + c, 13);
+    //instr
+    GotoXY(0,23);
+    writeln(INSTR);
 End;
 
 
 Begin
-  //initialize
   ClrScr;
   CursorOff;
   scrB := DPeek(88);
@@ -391,13 +398,8 @@ Begin
   cursor_row := ROW_MARGIN;
   song_selected := false;
 
-  DrawArnament();
-
-  GotoXY(0,0);
-  WriteInverse(TITLE);
-
-  SetIntVec(iVBL, @vbl);
-
+  DrawOrnament();
+  SetIntVec(iVBL, @vbl);//.md1 player
 
   //list/browse/play songs
   ListPageOfFiles();
@@ -413,5 +415,8 @@ Begin
       msx.init;
       msx.digi(is15Khz);
       msx.stop();
+      //clean up md1, bold assumtion - .Md1 up to 4KB
+      ptr := Pointer(ADDR_MD1);
+      FillChar(Ptr^, 4096, 0);
     End;
 End.
