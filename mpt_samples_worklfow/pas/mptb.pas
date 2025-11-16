@@ -6,12 +6,13 @@ Uses crt, sysutils, md1;
 Const   
   TITLE = 'POKEY DIGITALS VOL 1';
   INSTR = 'INSTR: USE ARROWS & ENTER';
+  PLS_WAIT = 'LAODING...';
   //colors
   COLBG   = $2C6;
   COLPF1  = $2C5;
   COLPF2  = $2C8;
   //MPT memory 
-  ADDR_PLAYER   = $6971;
+  ADDR_PLAYER   = $69ED;
   ADDR_MD1      = $76A0;
   ADDR_SAMPLES  = $86A0;
   //files
@@ -20,7 +21,7 @@ Const
   D15_EXT = '.D15';
   D8_EXT  = '.D8 ';
   //browser
-  COL_ITEMS_CNT = 21;
+  COL_ITEMS_CNT = 20;
   MAX_BROWSE_ITEMS = COL_ITEMS_CNT * 4;
   COL_WIDTH   = 8;
   COL_MARGIN  = 2;
@@ -30,7 +31,7 @@ Const
   ORNA_ADDR = $BA00; // custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
   //ornament 
   ORNAMENT_COL = 28;
-  ORNAMENT_ROW = 15;
+  ORNAMENT_ROW = 14;
 
 Var 
   //player
@@ -45,7 +46,7 @@ Var
   //default characterset address
   addr_char_base: byte absolute $D409;
   scrB: word;
-  ptr : pointer;
+  ptr : pointer;  
 
 {$r mptb.rc}
 
@@ -201,6 +202,7 @@ Var
   p: pointer;
   buf: array [0..255] Of byte;
   bytesRead: word;
+  ldr,r: byte;
 
 Begin
   Assign(f, filename);
@@ -211,8 +213,13 @@ Begin
     BlockRead(f, buf, SizeOf(buf), bytesRead);
     Move(buf, p^, bytesRead);
     addr := addr + bytesRead;
+    Inc(ldr);
+    if ldr>24 Then ldr:=0;
+    Poke(scrB + 840 + ldr, (peek($d20a) and 1) + 12);//loader indicator
   Until bytesRead = 0;
   Close(f);
+  //line    
+  For ldr := 0 To 27 Do Poke(scrB + 840 + ldr, 13);//restore line
 End;
 
 
@@ -259,6 +266,7 @@ Var
 
 Begin
   Poke(65,0); //silence i/o noise
+  GotoXY(0,22);WriteInverse(PLS_WAIT);
   is15Khz := true;
   //try .d15 ext
   song_file   := Concat(song_name, MD1_EXT);
@@ -275,7 +283,6 @@ Begin
   fullname := Concat(DRIVE, sample_file);  
   LoadFileToAddr(fullname, ADDR_SAMPLES);
 End;
-
 
 Procedure vbl;
 interrupt;
@@ -390,16 +397,15 @@ Begin
   //Tell ANTIC our font is the "official" one
   addr_char_base := Hi(CHARSET_ADDR);
   //colors
-  Poke(COLBG, $02);
+  Poke(COLBG, $04);
   Poke(COLPF1, $2a);
-  Poke(COLPF2, $02);
+  Poke(COLPF2, $04);
   //cursor
   cursor_col := COL_MARGIN - 1;
   cursor_row := ROW_MARGIN;
   song_selected := false;
 
-  DrawOrnament();
-  SetIntVec(iVBL, @vbl);//.md1 player
+  DrawOrnament();  
 
   //list/browse/play songs
   ListPageOfFiles();
@@ -407,8 +413,11 @@ Begin
     Begin
       Repeat
         Browse()
-      Until song_selected = true;
+      Until song_selected = true;     
+
       LoadSong();
+      
+      SetIntVec(iVBL, @vbl);//.md1 player
       msx.player  := pointer(ADDR_PLAYER);
       msx.modul   := pointer(ADDR_MD1);
       msx.sample  := pointer(ADDR_SAMPLES);
