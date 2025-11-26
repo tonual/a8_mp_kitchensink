@@ -12,7 +12,7 @@ Const
   COLPF1  = $2C5;
   COLPF2  = $2C8;
   //MPT memory 
-  ADDR_PLAYER   = $69ED;
+  ADDR_PLAYER   = $6A1A;
   ADDR_MD1      = $76A0;
   ADDR_SAMPLES  = $86A0;
   //files
@@ -27,7 +27,7 @@ Const
   COL_MARGIN  = 2;
   ROW_MARGIN  = 4;
   //charset
-  CHARSET_ADDR = $B800; // custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
+  CHARSET_ADDR = $B800; //custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
   ORNA_ADDR = $BA00; // custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
   //ornament 
   ORNAMENT_COL = 28;
@@ -205,6 +205,7 @@ Var
   ldr,r: byte;
 
 Begin
+  ldr := 10; //loading indicator start columns
   Assign(f, filename);
   Reset(f, 1);
 
@@ -214,7 +215,7 @@ Begin
     Move(buf, p^, bytesRead);
     addr := addr + bytesRead;
     Inc(ldr);
-    if ldr>24 Then ldr:=0;
+    if ldr > 24 Then ldr := 10;
     Poke(scrB + 840 + ldr, (peek($d20a) and 1) + 12);//loader indicator
   Until bytesRead = 0;
   Close(f);
@@ -235,7 +236,7 @@ Begin
   row := ROW_MARGIN;
   col := COL_MARGIN;
 
-  If FindFirst('D:*.MD1', faAnyFile, Info) = 0 Then   // '*.MD1  ?
+  If FindFirst(Concat(DRIVE,'*.MD1'), faAnyFile, Info) = 0 Then   // '*.MD1  ?
 
     Begin
       Repeat
