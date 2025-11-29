@@ -3,7 +3,7 @@
 
 Uses crt, sysutils, md1;
 
-Const   
+Const 
   TITLE = 'POKEY DIGITALS VOL 1';
   INSTR = 'INSTR: USE ARROWS & ENTER';
   PLS_WAIT = 'LAODING...';
@@ -12,12 +12,11 @@ Const
   COLPF1  = $2C5;
   COLPF2  = $2C8;
   //MPT memory 
-  ADDR_PLAYER   = $6A1A;
-  ADDR_MD1      = $76A0;
+  ADDR_PLAYER   = $6B80;
+  ADDR_MD1      = $76A0; //bold assumption md1 module <= 4096 bytes
   ADDR_SAMPLES  = $86A0;
   //files
-  DRIVE   = 'D:';
-  MD1_EXT = '.MD1';
+  DRIVE   = 'D:';  
   D15_EXT = '.D15';
   D8_EXT  = '.D8 ';
   //browser
@@ -27,11 +26,13 @@ Const
   COL_MARGIN  = 2;
   ROW_MARGIN  = 4;
   //charset
-  CHARSET_ADDR = $B800; //custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
-  ORNA_ADDR = $BA00; // custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
-  //ornament 
+  CHARSET_ADDR = $B800;
+  ORNA_ADDR = $BA00;//custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
+  //ornament pos
   ORNAMENT_COL = 28;
   ORNAMENT_ROW = 14;
+  //player
+  SNGPOS_ADDROFF = $921; //offset to addres where MPT player stores current song position 
 
 Var 
   //player
@@ -43,12 +44,31 @@ Var
   cursor_col : byte;
   cursor_row : byte;
   col_cnt_on_page: byte;
-  //default characterset address
+  //character set address
   addr_char_base: byte absolute $D409;
-  scrB: word;
-  ptr : pointer;  
+  scrBase: word;
+  //md1, song telemetry
+  ptr : pointer;
+  song_pos_addr : word;
+  songPos: byte;
+  lastSongPos : byte;
+  songLength : byte;
+  progress: byte;
 
 {$r mptb.rc}
+
+
+Function GetTrackLength(ModuleAddr: Word): byte;
+
+Var 
+  T1_offset, T2_offset: Word;
+Begin
+  T1_offset := PByte(Pointer(ModuleAddr + $01C0))^ Or (PByte(Pointer(ModuleAddr + $01C4))^ shl 8);
+  T2_offset := PByte(Pointer(ModuleAddr + $01C1))^ Or (PByte(Pointer(ModuleAddr + $01C5))^ shl 8);
+  Result := (T2_offset - T1_offset) shr 1;
+
+End;
+
 
 Function ReadStrAt(X, Y: Byte): string;
 
@@ -134,7 +154,7 @@ Begin
   //sanity checks
   If (read_cnt < DOS_HDR + 2) Or
      (buffer[0] <> $FF) Or (buffer[1] <> $FF) Then
-    Begin      
+    Begin
       Halt;
     End;
 
@@ -144,7 +164,7 @@ Begin
   ofs      := DOS_HDR;
 
   If read_cnt <> DOS_HDR + data_len Then
-    Begin      
+    Begin
       Halt;
     End;
   //Patch the DOS header for the new address
@@ -205,7 +225,8 @@ Var
   ldr,r: byte;
 
 Begin
-  ldr := 10; //loading indicator start columns
+  ldr := 10;
+  //loading indicator start columns
   Assign(f, filename);
   Reset(f, 1);
 
@@ -214,17 +235,17 @@ Begin
     BlockRead(f, buf, SizeOf(buf), bytesRead);
     Move(buf, p^, bytesRead);
     addr := addr + bytesRead;
-    Inc(ldr);
-    if ldr > 24 Then ldr := 10;
-    Poke(scrB + 840 + ldr, (peek($d20a) and 1) + 12);//loader indicator
+    Inc(ldr);If ldr > 24 Then ldr := 10;Poke(scrBase + 840 + ldr, (peek($d20a) and 1) + 12); //loader viz    
   Until bytesRead = 0;
   Close(f);
-  //line    
-  For ldr := 0 To 27 Do Poke(scrB + 840 + ldr, 13);//restore line
+  
+  For ldr := 0 To 27 Do
+    Poke(scrBase + 840 + ldr, 13);//restore line
+  
 End;
 
 
-Procedure ListPageOfFiles;
+Procedure ListFiles;
 
 Var 
   Info : TSearchRec;
@@ -251,12 +272,13 @@ Begin
             col := col + COL_MARGIN + COL_WIDTH;
             Inc(col_cnt_on_page);
           End;
-      
+
       Until FindNext(Info) <> 0;
       FindClose(Info);
 
     End;
 End;
+
 
 Procedure LoadSong;
 
@@ -266,11 +288,11 @@ Var
   fullname : string;
 
 Begin
-  Poke(65,0); //silence i/o noise
-  GotoXY(0,22);WriteInverse(PLS_WAIT);
+  Poke(65,0);//silence i/o noise
+  GotoXY(0,22);WriteInverse(PLS_WAIT);//print loading
   is15Khz := true;
-  //try .d15 ext
-  song_file   := Concat(song_name, MD1_EXT);
+  //try .d15 ext first, then .d8
+  song_file   := Concat(song_name, '.MD1');
   sample_file := Concat(song_name, D15_EXT);
   fullname := Concat(DRIVE, sample_file);
   If (FileExists(fullname) <> true) Then //if not,then it is .d8 ext
@@ -278,22 +300,64 @@ Begin
       sample_file := Concat(song_name, D8_EXT);
       is15Khz := false;
     End;
-  
   fullname := Concat(DRIVE, song_file);
   LoadAndRelocateMD1(fullname, ADDR_MD1);
-  fullname := Concat(DRIVE, sample_file);  
+  fullname := Concat(DRIVE, sample_file);
   LoadFileToAddr(fullname, ADDR_SAMPLES);
 End;
 
-Procedure vbl;
+
+Procedure Efx; //player visualization and song progress
+
+Var 
+  //efx
+  pattPos : byte;
+  lum : byte;
+  bgColor : byte;
+  boColor : byte;
+Begin
+  //rhythmic viz
+  pattPos := peek($74aa);//+$0928, +$0925,+$0922 + offset from end of MD1PLAY
+  
+  lum := peek($74a5);
+  bgColor := lum shl 2;
+  // Or: hue * 16 + lum
+  boColor := pattPos shl 2;
+  Poke(709, bgColor);
+  // Set playfield background (COLOR2)
+  Poke(712, boColor);
+  // Set border (COLOR4) to match
+
+  //song progress viz  
+  songPos := Peek(song_pos_addr);
+  If lastSongPos <> songPos Then
+    Begin
+      lastSongPos := songPos;
+      progress := (27 * songPos shr 1) Div songLength;
+      Poke(scrBase + 840 + progress, 12);
+    End;
+End;
+
+
+Procedure Vbl;
 interrupt;
 Begin
   msx.play;
+  If song_selected = true Then Efx;  
   If keypressed() Then msx.stop;
-  asm 
+  asm
   {     
     jmp xitvbv 
   };
+End;
+
+
+Procedure RestoreColors();
+Begin
+  //colors
+  Poke(COLBG, $04);
+  Poke(COLPF1, $2a);
+  Poke(COLPF2, $04);
 End;
 
 
@@ -312,42 +376,43 @@ Begin
     End;
 
   song_selected := false;
+  RestoreColors();
 
   GotoXY(cursor_col + 1, cursor_row);
   song_name := ReadStrAt(cursor_col + 1, cursor_row);
   WriteInverse(song_name);
-  
+
   ch := ReadKey;
-  GotoXY(cursor_col + 1, cursor_row);  
+  GotoXY(cursor_col + 1, cursor_row);
   writeln(song_name);
-  
+
   Case ord(ch) Of 
     45: //up
         Begin
           If cursor_row > ROW_MARGIN Then Dec(cursor_row);
         End;
     61: //down
-        Begin          
+        Begin
           offset := cursor_row * 40 + cursor_col;
-          If Peek(scrB + offset) <> 0 Then Inc(cursor_row);        
+          If Peek(scrBase + offset) <> 0 Then Inc(cursor_row);
         End;
     42: //right
         Begin
           offset := (cursor_row - 1) * 40 + (cursor_col + COL_MARGIN + COL_WIDTH);
-          If Peek(scrB + offset) <> 0 Then
+          If Peek(scrBase + offset) <> 0 Then
             Begin
-              cursor_col := cursor_col + COL_MARGIN + COL_WIDTH;             
+              cursor_col := cursor_col + COL_MARGIN + COL_WIDTH;
             End;
         End;
     43: //left
         Begin
           If cursor_col > COL_MARGIN + 1 Then
             Begin
-              cursor_col := cursor_col - (COL_MARGIN + COL_WIDTH);            
+              cursor_col := cursor_col - (COL_MARGIN + COL_WIDTH);
             End;
         End;
     155: //ENTER - sleltect song, make inversed
-         Begin           
+         Begin
            song_selected := true;
            GotoXY(cursor_col + 1, cursor_row);
            WriteInverse(song_name);
@@ -355,78 +420,76 @@ Begin
   End;
   //BLIP
   Sound(0, 255, 10, 3);
-  Delay(12);  
+  Delay(12);
   Sound(0, 0, 0, 0);
 End;
+
 
 Procedure DrawOrnament();
 
 Var 
-  c, startChar: byte;    
+  c, startChar: byte;
   r0,r1 : word;
   offsetx: byte;
 
-Begin    
-  WriteInverse(TITLE);    
+Begin
+  WriteInverse(TITLE);
   //ornament gfx
   startChar := 64;
-  r0 := scrB + ORNAMENT_ROW * 40 + ORNAMENT_COL;
-  r1 := scrB + (ORNAMENT_ROW + 8) * 40;
+  r0 := scrBase + ORNAMENT_ROW * 40 + ORNAMENT_COL;
+  r1 := scrBase + (ORNAMENT_ROW + 8) * 40;
   While r0 <= r1 Do
     Begin
       For c := 0 To 7 Do
         Begin
           Poke(r0 + c, startChar);
           Inc(startChar);
-        End;      
+        End;
       Inc(r0, 40);
     End;
-    //line    
-    For c := 0 To 27 Do Poke(scrB + 840 + c, 13);
-    //instr
-    GotoXY(0,23);
-    writeln(INSTR);
+  //line    
+  For c := 0 To 27 Do
+    Poke(scrBase + 840 + c, 13);
+  //instr
+  GotoXY(0,23);
+  writeln(INSTR);
 End;
 
 
 Begin
+
   ClrScr;
   CursorOff;
-  scrB := DPeek(88);
-  //custom font
-  Poke($2F4, Hi(CHARSET_ADDR));
+  scrBase := DPeek(88);
   //Tell ANTIC our font is the "official" one
-  addr_char_base := Hi(CHARSET_ADDR);
-  //colors
-  Poke(COLBG, $04);
-  Poke(COLPF1, $2a);
-  Poke(COLPF2, $04);
-  //cursor
+  Poke($2F4, Hi(CHARSET_ADDR));
+  //def curren song pos address
+  song_pos_addr := ADDR_PLAYER + SNGPOS_ADDROFF;
+  //browser cursor
   cursor_col := COL_MARGIN - 1;
   cursor_row := ROW_MARGIN;
   song_selected := false;
-
   DrawOrnament();  
+  ListFiles();
 
-  //list/browse/play songs
-  ListPageOfFiles();
   While true Do
     Begin
       Repeat
         Browse()
-      Until song_selected = true;     
-
-      LoadSong();
+      Until song_selected = true;
       
-      SetIntVec(iVBL, @vbl);//.md1 player
+      LoadSong();
+      songLength := GetTrackLength(ADDR_MD1);
+      SetIntVec(iVBL, @Vbl);      
       msx.player  := pointer(ADDR_PLAYER);
       msx.modul   := pointer(ADDR_MD1);
       msx.sample  := pointer(ADDR_SAMPLES);
       msx.init;
       msx.digi(is15Khz);
       msx.stop();
-      //clean up md1, bold assumtion - .Md1 up to 4KB
+
+      //clean up MD1 data
       ptr := Pointer(ADDR_MD1);
-      FillChar(Ptr^, 4096, 0);
+      FillChar(Ptr^, 4096, 0); //bold assumption md1 module <= 4096 bytes
     End;
 End.
