@@ -1,38 +1,43 @@
 {$DEFINE BASICOFF}
-{$DEFINE ROMOFF}
 
 Uses crt, sysutils, md1;
 
 Const 
   TITLE = 'POKEY DIGITALS VOL 1';
-  INSTR = 'INSTR: USE ARROWS & ENTER';
+  INSTR = 'USE ARROWS & ENTER';
   PLS_WAIT = 'LAODING...';
   //colors
   COLBG   = $2C6;
   COLPF1  = $2C5;
   COLPF2  = $2C8;
   //MPT memory 
-  ADDR_PLAYER   = $6B80;
-  ADDR_MD1      = $76A0; //bold assumption md1 module <= 4096 bytes
-  ADDR_SAMPLES  = $86A0;
+  ADDR_PLAYER   = $6b7d;
+  ADDR_MD1      = $74a8;
+  //bold assumption md1 module <= 4096 bytes
+  //ADDR_SAMPLES  = $852B;
   //files
-  DRIVE   = 'D:';  
+  DRIVE   = 'D:';
   D15_EXT = '.D15';
   D8_EXT  = '.D8 ';
   //browser
   COL_ITEMS_CNT = 20;
-  MAX_BROWSE_ITEMS = COL_ITEMS_CNT * 4;
   COL_WIDTH   = 8;
   COL_MARGIN  = 2;
   ROW_MARGIN  = 4;
   //charset
-  CHARSET_ADDR = $B800;
-  ORNA_ADDR = $BA00;//custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
+  CHARSET_ADDR = $B400;
+  ORNA_ADDR = $B600;
+  //custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
   //ornament pos
   ORNAMENT_COL = 28;
   ORNAMENT_ROW = 14;
   //player
-  SNGPOS_ADDROFF = $921; //offset to addres where MPT player stores current song position 
+  SNGPOS_ADDROFF = $921;
+  //offset to addres where MPT player stores current song position 
+  //PMG
+  PMG_BASE = $B800;
+  P_HEIGHT = 127;
+
 
 Var 
   //player
@@ -44,8 +49,6 @@ Var
   cursor_col : byte;
   cursor_row : byte;
   col_cnt_on_page: byte;
-  //character set address
-  addr_char_base: byte absolute $D409;
   scrBase: word;
   //md1, song telemetry
   ptr : pointer;
@@ -54,6 +57,15 @@ Var
   lastSongPos : byte;
   songLength : byte;
   progress: byte;
+  //PMG
+  P0: array [0..P_HEIGHT-1] Of byte absolute PMG_BASE + 512;
+  P1: array [0..P_HEIGHT-1] Of byte absolute PMG_BASE + 640;
+  P2: array [0..P_HEIGHT-1] Of byte absolute PMG_BASE + 768;
+  P3: array [0..P_HEIGHT-1] Of byte absolute PMG_BASE + 896;
+  viz1, viz2,viz3,viz4, i: byte;
+  //
+  md1module_size : word;
+
 
 {$r mptb.rc}
 
@@ -141,7 +153,7 @@ Var
   i        : byte;
   tmp      : word;
   ptn      : pointer;
-  buffer   : array[0..8191] Of byte;
+  buffer   : array[0..4096] Of byte;
   //are there bigger modules? (how to recycle memory from this buffer btw)  
 
 Begin
@@ -212,6 +224,8 @@ Begin
   //Copy the relocated module to its final location
   ptn := Pointer(new_address);
   Move(buffer[ofs], ptn, data_len);
+  md1module_size := read_cnt;
+  //TODO read_cnt redundant
 End;
 
 
@@ -235,13 +249,17 @@ Begin
     BlockRead(f, buf, SizeOf(buf), bytesRead);
     Move(buf, p^, bytesRead);
     addr := addr + bytesRead;
-    Inc(ldr);If ldr > 24 Then ldr := 10;Poke(scrBase + 840 + ldr, (peek($d20a) and 1) + 12); //loader viz    
+    Inc(ldr);
+    If ldr > 24 Then ldr := 10;
+    Poke(scrBase + 840 + ldr, (peek($d20a) and 1) + 12);
+    //loader viz    
   Until bytesRead = 0;
   Close(f);
-  
+
   For ldr := 0 To 27 Do
-    Poke(scrBase + 840 + ldr, 13);//restore line
-  
+    Poke(scrBase + 840 + ldr, 13);
+  //restore line
+
 End;
 
 
@@ -288,8 +306,11 @@ Var
   fullname : string;
 
 Begin
-  Poke(65,0);//silence i/o noise
-  GotoXY(0,22);WriteInverse(PLS_WAIT);//print loading
+  Poke(65,0);
+  //silence i/o noise
+  GotoXY(0,22);
+  WriteInverse(PLS_WAIT);
+  //print loading
   is15Khz := true;
   //try .d15 ext first, then .d8
   song_file   := Concat(song_name, '.MD1');
@@ -303,39 +324,66 @@ Begin
   fullname := Concat(DRIVE, song_file);
   LoadAndRelocateMD1(fullname, ADDR_MD1);
   fullname := Concat(DRIVE, sample_file);
-  LoadFileToAddr(fullname, ADDR_SAMPLES);
+  LoadFileToAddr(fullname, ADDR_MD1 + md1module_size + 4);
 End;
 
 
-Procedure Efx; //player visualization and song progress
+Procedure Efx;
+//player visualization and song progress
 
 Var 
   //efx
-  pattPos : byte;
-  lum : byte;
-  bgColor : byte;
-  boColor : byte;
+  pattPos,lum,aa,bb : byte;
+
 Begin
   //rhythmic viz
-  pattPos := peek($74aa);//+$0928, +$0925,+$0922 + offset from end of MD1PLAY
-  
-  lum := peek($74a5);
-  bgColor := lum shl 2;
-  // Or: hue * 16 + lum
-  boColor := pattPos shl 2;
-  Poke(709, bgColor);
-  // Set playfield background (COLOR2)
-  Poke(712, boColor);
-  // Set border (COLOR4) to match
+  pattPos := songPos;
+  //+$0928, +$0925,+$0922 + offset from end of MD1PLAY  
+  lum := songPos +1;
+  aa := songPos +2;
+  bb := songPos +3;
 
-  //song progress viz  
   songPos := Peek(song_pos_addr);
   If lastSongPos <> songPos Then
     Begin
+      //If viz1 <> pattPos Then
+      //Begin      
+      FillChar(P0, P_HEIGHT, 0);
+      FillChar(P0, songPos+1, $fF);
+      //viz1 := pattPos
+      //End;
+      //If viz2 <> lum Then
+      // Begin      
+      FillChar(P1, P_HEIGHT, 0);
+      FillChar(P1, songPos, $fF);
+      // viz2 := lum
+      //End;
+      //If viz3 <> aa Then
+      //Begin      
+      FillChar(P2, P_HEIGHT, 0);
+      FillChar(P2, songPos+2, $fF);
+      //viz3 := aa
+      //End;
+      //If viz4 <> bb Then
+      //Begin      
+      FillChar(P3, P_HEIGHT, 0);
+      FillChar(P3, songPos+3, $fF);
+      //viz4 := bb
+      //End;
       lastSongPos := songPos;
-      progress := (27 * songPos shr 1) Div songLength;
-      Poke(scrBase + 840 + progress, 12);
     End;
+
+
+
+
+  //song progress viz  
+  //songPos := Peek(song_pos_addr);
+  // If lastSongPos <> songPos Then
+  //   Begin
+  //     lastSongPos := songPos;
+  //     progress := (27 * songPos shr 1) Div songLength;
+  //     Poke(scrBase + 840 + progress, 12);
+  //   End;
 End;
 
 
@@ -343,7 +391,7 @@ Procedure Vbl;
 interrupt;
 Begin
   msx.play;
-  If song_selected = true Then Efx;  
+  If song_selected = true Then Efx;
   If keypressed() Then msx.stop;
   asm
   {     
@@ -430,7 +478,6 @@ Procedure DrawOrnament();
 Var 
   c, startChar: byte;
   r0,r1 : word;
-  offsetx: byte;
 
 Begin
   WriteInverse(TITLE);
@@ -469,7 +516,7 @@ Begin
   cursor_col := COL_MARGIN - 1;
   cursor_row := ROW_MARGIN;
   song_selected := false;
-  DrawOrnament();  
+  DrawOrnament();
   ListFiles();
 
   While true Do
@@ -477,19 +524,42 @@ Begin
       Repeat
         Browse()
       Until song_selected = true;
-      
+
       LoadSong();
       songLength := GetTrackLength(ADDR_MD1);
-      SetIntVec(iVBL, @Vbl);      
+
+      // PMG setup
+      Poke(54279, PMG_BASE shr 8);
+      // PMBASE
+      Poke(559,   46);
+      // DMACTL: double-line + players + missiles
+      Poke(53277, 3);
+      // GRACTL: enable players + missiles
+      // player colors
+      Poke(704, $34);
+      Poke(705, $28);
+      Poke(706, $EC);
+      Poke(707, $C6);
+      // player positions
+      Poke(53248, 120);
+      Poke(53249, 130);
+      Poke(53250, 140);
+      Poke(53251, 150);
+      // normal size
+      FillChar(pointer(53256), 4, 0);
+      //end PMG setup
+
+      SetIntVec(iVBL, @Vbl);
       msx.player  := pointer(ADDR_PLAYER);
       msx.modul   := pointer(ADDR_MD1);
-      msx.sample  := pointer(ADDR_SAMPLES);
+      msx.sample  := pointer(ADDR_MD1 + md1module_size + 4);
       msx.init;
       msx.digi(is15Khz);
       msx.stop();
 
       //clean up MD1 data
       ptr := Pointer(ADDR_MD1);
-      FillChar(Ptr^, 4096, 0); //bold assumption md1 module <= 4096 bytes
+      FillChar(Ptr^, 4096, 0);
+      //bold assumption md1 module <= 4096 bytes
     End;
 End.
