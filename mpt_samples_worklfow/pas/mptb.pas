@@ -33,7 +33,8 @@ Const
   ORNAMENT_ROW = 14;
   //player
   SNGPOS_ADDROFF = $921;
-  SNG_INSTR_HIT_BASE = $08F8;  //+1 for each track (up to 8fb)
+  SNG_INSTR_HIT_BASE = $08F8;
+  //+1 for each track (up to 8fb)
   //PMG
   PMG_BASE = $B800;
   P_HEIGHT = 127;
@@ -62,8 +63,8 @@ Var
   P1: array [0..P_HEIGHT-1] Of byte absolute PMG_BASE + 640;
   P2: array [0..P_HEIGHT-1] Of byte absolute PMG_BASE + 768;
   P3: array [0..P_HEIGHT-1] Of byte absolute PMG_BASE + 896;
-  lst_t1_hit,lst_t2_hit,lst_t3_hit,lst_t4_hit: byte;
-  i:byte;
+  lst_t1_hit,lst_t2_hit,lst_t3_hit,lst_t4_hit, lst_pat_pos: byte;
+  i: byte;
   //
   md1module_size : word;
 
@@ -332,55 +333,69 @@ End;
 Procedure Efx;
 //player visualization and song progress
 
- var
-  t1h,t2h,t3h,t4h:byte;
+Var 
+  pattPos, t1h,t2h,t3h,t4h,eqv : byte;
+
 
 Begin
-      //rhythmic viz
-      t1h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER);
-      t2h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 1);
-      t3h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 2);
-      t4h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 3);
-  
-      Inc(i);
+  //rhythmic viz
+  t1h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER);
+  t2h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 1);
+  t3h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 2);
+  t4h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 3);
+  pattPos := peek(ADDR_PLAYER + $092a);
 
-      //1  
+  If pattPos <> lst_pat_pos Then
+    Begin
+      FillChar(P0, P_HEIGHT, 0);
+      FillChar(P1, P_HEIGHT, 0);
+      FillChar(P2, P_HEIGHT, 0);
+      FillChar(P3, P_HEIGHT, 0);
+      lst_pat_pos := pattPos;
+      
       If lst_t1_hit <> t1h Then
-      Begin      
-        FillChar(P0, P_HEIGHT, 0);
-        FillChar(P0, peek(53760) shr 1 * peek(53761) shr 6 , $0f);//freq * volume
-        lst_t1_hit := t1h;
-      End;
+        Begin
+          //eqv := (peek(53760) * peek(53761) +255) Div 512;
+          //freq * valume normalized for screen
+          //FillChar(P0, P_HEIGHT , 0);        
+          FillChar(P0, P_HEIGHT, $ff);
+          lst_t1_hit := t1h;
+        End;
       //2
       If lst_t2_hit <> t2h  Then
-      Begin      
-        FillChar(P1, P_HEIGHT, 0);
-        FillChar(P1,peek(53762) shr 1 * peek(53763) shr 6, $0f);
-        lst_t2_hit := t2h;
-      End;
+        Begin
+          //eqv := (peek(53762) * peek(53763)+255) Div 512;
+          //FillChar(P1, P_HEIGHT, 0);
+          FillChar(P1,P_HEIGHT, $ff);
+          lst_t2_hit := t2h;
+        End;
       //3
       If lst_t3_hit <> t3h Then
-      Begin      
-        FillChar(P2, P_HEIGHT, 0);
-        FillChar(P2, peek(53764) shr 1 * peek(53765) shr 6, $0f);
-        lst_t3_hit := t3h;
-      End;
+        Begin
+          //eqv := (peek(53764) * peek(53765)+255) Div 512;
+          //FillChar(P2, P_HEIGHT, 0);
+          FillChar(P2, P_HEIGHT, $ff);
+          lst_t3_hit := t3h;
+        End;
       //4
       If lst_t4_hit <> t4h  Then
-      Begin      
-        FillChar(P3, P_HEIGHT, 0);
-        FillChar(P3, peek(53766) shr 1 * peek(53767) shr 6, $0f);
-        lst_t4_hit := t4h;
-      End;
+        Begin
+          //eqv := (peek(53766) * peek(53767)+255) Div 512;
+          //FillChar(P3, P_HEIGHT, 0);
+          FillChar(P3, P_HEIGHT, $ff);
+          lst_t4_hit := t4h;
+        End;
 
-             
+    End;
+
+
   //song progress viz  
   songPos := Peek(song_pos_addr);
   If lastSongPos <> songPos Then
     Begin
       lastSongPos := songPos;
       progress := (27 * songPos shr 1) Div songLength;
-      Poke(scrBase + 840 + progress, 12); Poke(scrBase + 840 -1 + progress, 12);
+      for i := 0 to progress do Poke(scrBase + 840 + i, 12);      
     End;
 End;
 
@@ -532,11 +547,11 @@ Begin
       Poke(705, $28);
       Poke(706, $EC);
       Poke(707, $C6);
-      // player positions
+      // player positions horizontal
       Poke(53248, 160);
-      Poke(53249, 165);
-      Poke(53250, 170);
-      Poke(53251, 175);
+      Poke(53249, 168);
+      Poke(53250, 176);
+      Poke(53251, 184);
       // normal size
       FillChar(pointer(53256), 4, 0);
       //end PMG setup
