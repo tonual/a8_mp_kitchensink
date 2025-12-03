@@ -33,7 +33,7 @@ Const
   ORNAMENT_ROW = 14;
   //player
   SNGPOS_ADDROFF = $921;
-  //offset to addres where MPT player stores current song position 
+  SNG_INSTR_HIT_BASE = $08F8;  //+1 for each track (up to 8fb)
   //PMG
   PMG_BASE = $B800;
   P_HEIGHT = 127;
@@ -62,7 +62,8 @@ Var
   P1: array [0..P_HEIGHT-1] Of byte absolute PMG_BASE + 640;
   P2: array [0..P_HEIGHT-1] Of byte absolute PMG_BASE + 768;
   P3: array [0..P_HEIGHT-1] Of byte absolute PMG_BASE + 896;
-  viz1, viz2,viz3,viz4, i: byte;
+  lst_t1_hit,lst_t2_hit,lst_t3_hit,lst_t4_hit: byte;
+  i:byte;
   //
   md1module_size : word;
 
@@ -331,59 +332,56 @@ End;
 Procedure Efx;
 //player visualization and song progress
 
-Var 
-  //efx
-  pattPos,lum,aa,bb : byte;
+ var
+  t1h,t2h,t3h,t4h:byte;
 
 Begin
-  //rhythmic viz
-  pattPos := songPos;
-  //+$0928, +$0925,+$0922 + offset from end of MD1PLAY  
-  lum := songPos +1;
-  aa := songPos +2;
-  bb := songPos +3;
+      //rhythmic viz
+      t1h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER);
+      t2h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 1);
+      t3h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 2);
+      t4h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 3);
+  
+      Inc(i);
 
+      //1  
+      If lst_t1_hit <> t1h Then
+      Begin      
+        FillChar(P0, P_HEIGHT, 0);
+        FillChar(P0, peek(53760) shr 1 * peek(53761) shr 6 , $0f);//freq * volume
+        lst_t1_hit := t1h;
+      End;
+      //2
+      If lst_t2_hit <> t2h  Then
+      Begin      
+        FillChar(P1, P_HEIGHT, 0);
+        FillChar(P1,peek(53762) shr 1 * peek(53763) shr 6, $0f);
+        lst_t2_hit := t2h;
+      End;
+      //3
+      If lst_t3_hit <> t3h Then
+      Begin      
+        FillChar(P2, P_HEIGHT, 0);
+        FillChar(P2, peek(53764) shr 1 * peek(53765) shr 6, $0f);
+        lst_t3_hit := t3h;
+      End;
+      //4
+      If lst_t4_hit <> t4h  Then
+      Begin      
+        FillChar(P3, P_HEIGHT, 0);
+        FillChar(P3, peek(53766) shr 1 * peek(53767) shr 6, $0f);
+        lst_t4_hit := t4h;
+      End;
+
+             
+  //song progress viz  
   songPos := Peek(song_pos_addr);
   If lastSongPos <> songPos Then
     Begin
-      //If viz1 <> pattPos Then
-      //Begin      
-      FillChar(P0, P_HEIGHT, 0);
-      FillChar(P0, songPos+1, $fF);
-      //viz1 := pattPos
-      //End;
-      //If viz2 <> lum Then
-      // Begin      
-      FillChar(P1, P_HEIGHT, 0);
-      FillChar(P1, songPos, $fF);
-      // viz2 := lum
-      //End;
-      //If viz3 <> aa Then
-      //Begin      
-      FillChar(P2, P_HEIGHT, 0);
-      FillChar(P2, songPos+2, $fF);
-      //viz3 := aa
-      //End;
-      //If viz4 <> bb Then
-      //Begin      
-      FillChar(P3, P_HEIGHT, 0);
-      FillChar(P3, songPos+3, $fF);
-      //viz4 := bb
-      //End;
       lastSongPos := songPos;
+      progress := (27 * songPos shr 1) Div songLength;
+      Poke(scrBase + 840 + progress, 12); Poke(scrBase + 840 -1 + progress, 12);
     End;
-
-
-
-
-  //song progress viz  
-  //songPos := Peek(song_pos_addr);
-  // If lastSongPos <> songPos Then
-  //   Begin
-  //     lastSongPos := songPos;
-  //     progress := (27 * songPos shr 1) Div songLength;
-  //     Poke(scrBase + 840 + progress, 12);
-  //   End;
 End;
 
 
@@ -398,16 +396,6 @@ Begin
     jmp xitvbv 
   };
 End;
-
-
-Procedure RestoreColors();
-Begin
-  //colors
-  Poke(COLBG, $04);
-  Poke(COLPF1, $2a);
-  Poke(COLPF2, $04);
-End;
-
 
 Procedure Browse();
 
@@ -424,7 +412,6 @@ Begin
     End;
 
   song_selected := false;
-  RestoreColors();
 
   GotoXY(cursor_col + 1, cursor_row);
   song_name := ReadStrAt(cursor_col + 1, cursor_row);
@@ -507,6 +494,11 @@ Begin
 
   ClrScr;
   CursorOff;
+  //backgorund
+  Poke(COLBG, $04);
+  Poke(COLPF1, $2a);
+  Poke(COLPF2, $04);
+  //
   scrBase := DPeek(88);
   //Tell ANTIC our font is the "official" one
   Poke($2F4, Hi(CHARSET_ADDR));
@@ -541,10 +533,10 @@ Begin
       Poke(706, $EC);
       Poke(707, $C6);
       // player positions
-      Poke(53248, 120);
-      Poke(53249, 130);
-      Poke(53250, 140);
-      Poke(53251, 150);
+      Poke(53248, 160);
+      Poke(53249, 165);
+      Poke(53250, 170);
+      Poke(53251, 175);
       // normal size
       FillChar(pointer(53256), 4, 0);
       //end PMG setup
