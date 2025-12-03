@@ -11,10 +11,10 @@ Const
   COLPF1  = $2C5;
   COLPF2  = $2C8;
   //MPT memory 
-  ADDR_PLAYER   = $6b7d;
-  ADDR_MD1      = $74a8;
+  ADDR_PLAYER   = $5b6e;
+  ADDR_MD1      = $6499;
   //bold assumption md1 module <= 4096 bytes
-  //ADDR_SAMPLES  = $852B;
+  ADDR_SAMPLES  = $7499;
   //files
   DRIVE   = 'D:';
   D15_EXT = '.D15';
@@ -38,7 +38,8 @@ Const
   //PMG
   PMG_BASE = $B800;
   P_HEIGHT = 127;
-
+  GRACTL = $D01D;
+  DMACTL = $D400;
 
 Var 
   //player
@@ -326,7 +327,7 @@ Begin
   fullname := Concat(DRIVE, song_file);
   LoadAndRelocateMD1(fullname, ADDR_MD1);
   fullname := Concat(DRIVE, sample_file);
-  LoadFileToAddr(fullname, ADDR_MD1 + md1module_size + 4);
+  LoadFileToAddr(fullname, ADDR_SAMPLES);
 End;
 
 
@@ -352,7 +353,7 @@ Begin
       FillChar(P2, P_HEIGHT, 0);
       FillChar(P3, P_HEIGHT, 0);
       lst_pat_pos := pattPos;
-      
+            
       If lst_t1_hit <> t1h Then
         Begin
           //eqv := (peek(53760) * peek(53761) +255) Div 512;
@@ -388,15 +389,14 @@ Begin
 
     End;
 
-
   //song progress viz  
-  songPos := Peek(song_pos_addr);
-  If lastSongPos <> songPos Then
-    Begin
-      lastSongPos := songPos;
-      progress := (27 * songPos shr 1) Div songLength;
-      for i := 0 to progress do Poke(scrBase + 840 + i, 12);      
-    End;
+  // songPos := Peek(song_pos_addr);
+  // If lastSongPos <> songPos Then
+  //   Begin
+  //     lastSongPos := songPos;
+  //     progress := (27 * songPos shr 1) Div songLength;
+  //     for i := 0 to progress do Poke(scrBase + 840 + i, 12);      
+  //   End;
 End;
 
 
@@ -537,6 +537,7 @@ Begin
 
       // PMG setup
       Poke(54279, PMG_BASE shr 8);
+      Poke(53275, 0); //over chracters
       // PMBASE
       Poke(559,   46);
       // DMACTL: double-line + players + missiles
@@ -553,17 +554,18 @@ Begin
       Poke(53250, 176);
       Poke(53251, 184);
       // normal size
-      FillChar(pointer(53256), 4, 0);
+      FillChar(pointer(53256), 4, 0);     
+      
       //end PMG setup
 
       SetIntVec(iVBL, @Vbl);
       msx.player  := pointer(ADDR_PLAYER);
       msx.modul   := pointer(ADDR_MD1);
-      msx.sample  := pointer(ADDR_MD1 + md1module_size + 4);
+      msx.sample  := pointer(ADDR_SAMPLES);
       msx.init;
       msx.digi(is15Khz);
       msx.stop();
-
+      
       //clean up MD1 data
       ptr := Pointer(ADDR_MD1);
       FillChar(Ptr^, 4096, 0);
