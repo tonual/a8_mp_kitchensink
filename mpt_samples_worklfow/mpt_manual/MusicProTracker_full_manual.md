@@ -283,3 +283,17 @@ JSR PLAYER   ; wyłączenie generatorów
 ```
 
 ---
+### Dane podczas ogrywania utworu
+
+Dla Playera MPT 2.4, załadowanego pod $3000:
+
+$392A - pozycja w utworze (numer wiersza track'a)
+
+Trigger nowej nuty (z każdą odczytaną nutą wartość będzie się zmieniać- oznacz - ile jeszcze linii patternu mam przeskoczyć, zanim znowu wczytam nową nutę)
+
+```
+track 0,      $38F8
+track 1,      $38F9
+track 2,      $38FA
+track 3,      $38FB
+```
