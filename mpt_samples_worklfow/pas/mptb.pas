@@ -12,6 +12,7 @@ Const
   COLPF2  = $2C8;
   //MPT memory 
   ADDR_PLAYER   = $5b6e;
+  //!! check compile -> DATA: $3B35..$5B63 take sesecond part +1 
   ADDR_MD1      = $6499;
   //bold assumption md1 module <= 4096 bytes
   ADDR_SAMPLES  = $7499;
@@ -22,7 +23,7 @@ Const
   //browser
   COL_ITEMS_CNT = 20;
   COL_WIDTH   = 8;
-  COL_MARGIN  = 2;
+  COL_MARGIN  = 1;
   ROW_MARGIN  = 4;
   //charset
   CHARSET_ADDR = $B400;
@@ -30,16 +31,17 @@ Const
   //custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
   //ornament pos
   ORNAMENT_COL = 28;
-  ORNAMENT_ROW = 14;
+  ORNAMENT_ROW = 4;
   //player
   SNGPOS_ADDROFF = $921;
   SNG_INSTR_HIT_BASE = $08F8;
   //+1 for each track (up to 8fb)
   //PMG
   PMG_BASE = $B800;
-  P_HEIGHT = 127;
+  P_HEIGHT = 64;
   GRACTL = $D01D;
   DMACTL = $D400;
+
 
 Var 
   //player
@@ -59,11 +61,8 @@ Var
   lastSongPos : byte;
   songLength : byte;
   progress: byte;
-  //PMG
-  P0: array [0..P_HEIGHT-1] Of byte absolute PMG_BASE + 512;
-  P1: array [0..P_HEIGHT-1] Of byte absolute PMG_BASE + 640;
-  P2: array [0..P_HEIGHT-1] Of byte absolute PMG_BASE + 768;
-  P3: array [0..P_HEIGHT-1] Of byte absolute PMG_BASE + 896;
+
+
   lst_t1_hit,lst_t2_hit,lst_t3_hit,lst_t4_hit, lst_pat_pos: byte;
   i: byte;
   //
@@ -341,6 +340,7 @@ Var
 Begin
   //rhythmic viz
   t1h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER);
+  //when track 1-4 encounters note to play
   t2h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 1);
   t3h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 2);
   t4h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 3);
@@ -348,18 +348,24 @@ Begin
 
   If pattPos <> lst_pat_pos Then
     Begin
-      FillChar(P0, P_HEIGHT, 0);
-      FillChar(P1, P_HEIGHT, 0);
-      FillChar(P2, P_HEIGHT, 0);
-      FillChar(P3, P_HEIGHT, 0);
+      Poke(53248, 00);
+      //move to hotizontal pos
+      Poke(53249, 00);
+      //move to hotizontal pos
+      Poke(53250, 00);
+      //move to hotizontal pos
+      Poke(53251, 0);
+      //move to hotizontal pos
       lst_pat_pos := pattPos;
-            
+
       If lst_t1_hit <> t1h Then
         Begin
           //eqv := (peek(53760) * peek(53761) +255) Div 512;
           //freq * valume normalized for screen
           //FillChar(P0, P_HEIGHT , 0);        
-          FillChar(P0, P_HEIGHT, $ff);
+          //FillChar(P0, P_HEIGHT, $ff);
+          Poke(53248, 160); //player positions
+          //move to hotizontal pos
           lst_t1_hit := t1h;
         End;
       //2
@@ -367,7 +373,12 @@ Begin
         Begin
           //eqv := (peek(53762) * peek(53763)+255) Div 512;
           //FillChar(P1, P_HEIGHT, 0);
-          FillChar(P1,P_HEIGHT, $ff);
+          Poke(53249, 168);
+          //move to hotizontal pos
+
+
+        Poke(48582, 192);
+
           lst_t2_hit := t2h;
         End;
       //3
@@ -375,7 +386,12 @@ Begin
         Begin
           //eqv := (peek(53764) * peek(53765)+255) Div 512;
           //FillChar(P2, P_HEIGHT, 0);
-          FillChar(P2, P_HEIGHT, $ff);
+          Poke(53250, 176);
+          //move to hotizontal pos
+
+
+          
+          //          FillChar(P2, P_HEIGHT, $ff);
           lst_t3_hit := t3h;
         End;
       //4
@@ -383,7 +399,9 @@ Begin
         Begin
           //eqv := (peek(53766) * peek(53767)+255) Div 512;
           //FillChar(P3, P_HEIGHT, 0);
-          FillChar(P3, P_HEIGHT, $ff);
+          Poke(53251, 184);
+          //move to hotizontal pos
+          //        FillChar(P3, P_HEIGHT, $ff);
           lst_t4_hit := t4h;
         End;
 
@@ -482,8 +500,6 @@ Var
   r0,r1 : word;
 
 Begin
-  WriteInverse(TITLE);
-  //ornament gfx
   startChar := 64;
   r0 := scrBase + ORNAMENT_ROW * 40 + ORNAMENT_COL;
   r1 := scrBase + (ORNAMENT_ROW + 8) * 40;
@@ -492,17 +508,14 @@ Begin
       For c := 0 To 7 Do
         Begin
           Poke(r0 + c, startChar);
+          
           Inc(startChar);
         End;
       Inc(r0, 40);
     End;
-  //line    
-  For c := 0 To 27 Do
-    Poke(scrBase + 840 + c, 13);
-  //instr
-  GotoXY(0,23);
-  writeln(INSTR);
+
 End;
+
 
 
 Begin
@@ -510,9 +523,9 @@ Begin
   ClrScr;
   CursorOff;
   //backgorund
-  Poke(COLBG, $04);
-  Poke(COLPF1, $2a);
-  Poke(COLPF2, $04);
+  Poke(COLBG, $02);
+  Poke(COLPF1, $1a);
+  Poke(COLPF2, $02);
   //
   scrBase := DPeek(88);
   //Tell ANTIC our font is the "official" one
@@ -523,7 +536,17 @@ Begin
   cursor_col := COL_MARGIN - 1;
   cursor_row := ROW_MARGIN;
   song_selected := false;
-  DrawOrnament();
+  //
+  WriteInverse(TITLE);
+  DrawOrnament();  
+  //line    
+  For i := 0 To 27 Do
+    Poke(scrBase + 840 + i, 13);
+  //instr
+  GotoXY(0,23);
+  writeln(INSTR);
+
+  //LOAD DIRECTORY LISTING
   ListFiles();
 
   While true Do
@@ -537,10 +560,11 @@ Begin
 
       // PMG setup
       Poke(54279, PMG_BASE shr 8);
-      Poke(53275, 0); //over chracters
+      Poke(53275, 0);
+      //over chracters
       // PMBASE
       Poke(559,   46);
-      // DMACTL: double-line + players + missiles
+      // DMACTL: 3 for double-line + players + missiles ... $0C for quad lines
       Poke(53277, 3);
       // GRACTL: enable players + missiles
       // player colors
@@ -554,8 +578,16 @@ Begin
       Poke(53250, 176);
       Poke(53251, 184);
       // normal size
-      FillChar(pointer(53256), 4, 0);     
-      
+      FillChar(pointer(53256), 4, 0);
+      //draw  
+      ptr := Pointer(PMG_BASE + 512);
+      FillChar(ptr^, P_HEIGHT, $ff);
+      ptr := Pointer(PMG_BASE + 640);
+      FillChar(ptr^, P_HEIGHT, $ff);
+      ptr := Pointer(PMG_BASE + 768);
+      FillChar(ptr^, P_HEIGHT, $ff);
+      ptr := Pointer(PMG_BASE + 896);
+      FillChar(ptr^, P_HEIGHT, $ff);
       //end PMG setup
 
       SetIntVec(iVBL, @Vbl);
@@ -565,7 +597,7 @@ Begin
       msx.init;
       msx.digi(is15Khz);
       msx.stop();
-      
+
       //clean up MD1 data
       ptr := Pointer(ADDR_MD1);
       FillChar(Ptr^, 4096, 0);
