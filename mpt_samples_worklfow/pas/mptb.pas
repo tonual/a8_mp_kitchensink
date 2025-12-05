@@ -3,14 +3,15 @@
 Uses crt, sysutils, md1;
 
 Const 
-  TITLE = 'POKEY DIGITALS VOL 1';  
+  TITLE = 'POKEY DIGITALS VOL 1';
 
   //colors
   COLBG   = $2C6;
   COLPF1  = $2C5;
   COLPF2  = $2C8;
   //MPT memory 
-  ADDR_PLAYER   = $5b6e; //DONT MAKE LOWER THEN 5B6E!!!
+  ADDR_PLAYER   = $5b6e;
+  //DONT MAKE LOWER THEN 5B6E!!!
   //!! check compile -> DATA: $3B35..$5B63 take sesecond part +1 
   ADDR_MD1      = $6499;
   //bold assumption md1 module <= 4096 bytes
@@ -20,7 +21,7 @@ Const
   D15_EXT = '.D15';
   D8_EXT  = '.D8 ';
   //browser
-  COL_ITEMS_CNT = 20;
+  COL_ITEMS_CNT = 21;
   COL_WIDTH   = 8;
   COL_MARGIN  = 1;
   ROW_MARGIN  = 4;
@@ -30,16 +31,16 @@ Const
   //custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
   //ornament pos
   ORNAMENT_COL = 28;
-  ORNAMENT_ROW = 0;
+  ORNAMENT_ROW = 16;
   //player
   MPT_SONGPOS_ADDROFF = $921;
   MPT_INSTR_HIT_ADDOFFS = $08F8;
-  MPT_TEMPO_ADDOFFS = $01C9;  
+  MPT_TEMPO_ADDOFFS = $01C9;
   //+1 for each track (up to 8fb)
   //PMG
-  PMG_BASE = $B800; 
-  PMG_PLR_HEIGHT = 48;
-  
+  PMG_BASE = $B800;
+  PMG_PLR_HEIGHT = 127;
+
 
 
 Var 
@@ -61,10 +62,12 @@ Var
   songLength : byte;
   progress: byte;
   //
-  qtick, vbldx :byte;
-  
+  qtick, vbldx : byte;
+
   lst_t1_hit,lst_t2_hit,lst_t3_hit,lst_t4_hit, lst_pat_pos: byte;
   i: byte;
+  col: byte;
+
   //
   md1module_size : word;
 
@@ -72,16 +75,18 @@ Var
 {$r mptb.rc}
 
 
-// Function GetTrackLength(ModuleAddr: Word): byte;
+  // Function GetTrackLength(ModuleAddr: Word): byte;
 
-// Var 
-//   T1_offset, T2_offset: Word;
-// Begin
+  // Var 
+  //   T1_offset, T2_offset: Word;
+  // Begin
+
 //   T1_offset := PByte(Pointer(ModuleAddr + $01C0))^ Or (PByte(Pointer(ModuleAddr + $01C4))^ shl 8);
-//   T2_offset := PByte(Pointer(ModuleAddr + $01C1))^ Or (PByte(Pointer(ModuleAddr + $01C5))^ shl 8);
-//   Result := (T2_offset - T1_offset) shr 1;
 
-// End;
+//   T2_offset := PByte(Pointer(ModuleAddr + $01C1))^ Or (PByte(Pointer(ModuleAddr + $01C5))^ shl 8);
+  //   Result := (T2_offset - T1_offset) shr 1;
+
+  // End;
 
 
 Function ReadStrAt(X, Y: Byte): string;
@@ -237,21 +242,22 @@ Var
   f: file;
   p: pointer;
   buf: array [0..255] Of byte;
-  bytesRead: word;  
+  bytesRead: word;
 
-Begin    
+Begin
   Assign(f, filename);
   Reset(f, 1);
-  
+
   Repeat
     p := pointer(addr);
     BlockRead(f, buf, SizeOf(buf), bytesRead);
     Move(buf, p^, bytesRead);
     addr := addr + bytesRead;
     //viz
-    Poke(scrBase + 840 + (peek($d20a) and 14) + 10,  (peek($d20a) and 1) + 12);//random dots
+    Poke(scrBase + 880 + (peek($d20a) and 14) + 10,  (peek($d20a) and 1) + 12);
+    //random dots
   Until bytesRead = 0;
-  Close(f);  
+  Close(f);
 End;
 
 
@@ -272,7 +278,7 @@ Begin
     Begin
       Repeat
         song_name := GetFileBase(Info.Name);
-        GotoXY(col,row);        
+        GotoXY(col,row);
         write(song_name);
         Inc(row);
 
@@ -298,14 +304,16 @@ Var
   fullname : string;
 
 Begin
-  Poke(65,0);//silence i/o noise  
-  GotoXY(0,22); WriteInverse('LOADING..');
+  Poke(65,0);
+  //silence i/o noise  
+  GotoXY(0,23);
+  WriteInverse('LOADING..');
   //print loading
   is15Khz := true;
   //try .d15 ext first, then .d8
   song_file   := Concat(song_name, '.MD1');
   sample_file := Concat(song_name, D15_EXT);
-  
+
   If (FileExists(Concat(DRIVE, sample_file)) <> true) Then //if not,then it is .d8 ext
     Begin
       sample_file := Concat(song_name, D8_EXT);
@@ -318,11 +326,19 @@ Begin
   LoadFileToAddr(Concat(DRIVE,'ORNA1.FNT'), ORNA_ADDR);
   //songLength := GetTrackLength(ADDR_MD1);
   //figure out quarter tick based on tempo
-  qtick := (peek(MPT_TEMPO_ADDOFFS + ADDR_MD1) + 1) shr 1; //halftick shr 1, quartertick shr 2
+  qtick := (peek(MPT_TEMPO_ADDOFFS + ADDR_MD1) + 1) shr 1;
+  //halftick shr 1, quartertick shr 2
   //gfx
   //clear loading text   
-  For i := 0 To 27 Do Poke(scrBase + 840 + i, 13);
+  For i := 0 To 27 Do
+    Poke(scrBase + 880 + i, 0);
 End;
+
+
+
+
+
+
 
 
 Procedure Efx;
@@ -339,56 +355,82 @@ Begin
   t2h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 1);
   t3h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 2);
   t4h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 3);
-  //pattPos := peek(ADDR_PLAYER + $092a);
+  pattPos := peek(ADDR_PLAYER + $092a);
 
   Inc(vbldx);
-  
-  
-  if vbldx = qtick Then
-  Begin        
-      Poke(53248, 0);
-      Poke(53249, 00);      
-      Poke(53250, 00);      
-      Poke(53251, 0);      
-      vbldx :=0;      
-      
-  End;
 
-  //If pattPos <> lst_pat_pos Then
-    //Begin
-      //lst_pat_pos := pattPos;
 
-      If lst_t1_hit <> t1h Then
-        Begin        
-          //eqv := (peek(53760) * peek(53761) +255) Div 512;     //PROBING POKEY IS //SLOWWW!
-          Poke(53248, 160); //player positions, //move to hotizontal pos
-          
-          lst_t1_hit := t1h;
-        End;
-      //2
-      If lst_t2_hit <> t2h  Then
-        Begin
-          //eqv := (peek(53762) * peek(53763)+255) Div 512;          
-          Poke(53249, 168);
-          //move to hotizontal pos          
-          lst_t2_hit := t2h;
-        End;
-      //3
-      If lst_t3_hit <> t3h Then
-        Begin
-          //eqv := (peek(53764) * peek(53765)+255) Div 512;          
-          Poke(53250, 176);          
-          lst_t3_hit := t3h;
-        End;
-      //4
-      If lst_t4_hit <> t4h  Then
-        Begin
-          //eqv := (peek(53766) * peek(53767)+255) Div 512;          
-          Poke(53251, 184);        
-          lst_t4_hit := t4h;
-        End;
+  If vbldx = qtick shl 2 Then
+    Begin
+      // Poke(53248, 0);
+      // Poke(53249, 00);      
+      // Poke(53250, 00);      
+      // Poke(53251, 0);      
 
-    //End;
+      // Poke(704, 0);
+      //       Poke(705, 0);
+      //       Poke(706, 0);
+      //       Poke(707, 0);
+
+      Poke(704, Peek(704) - 1);
+      Poke(705, Peek(705) - 1);
+      Poke(706, Peek(706) - 1);
+      Poke(707, Peek(707)- 1);
+      vbldx := 0;
+
+    End;
+
+  // If pattPos <> lst_pat_pos Then
+  //   Begin
+  //     lst_pat_pos := pattPos;
+  //       Poke(704, Peek(704) - 1);
+  //     Poke(705, Peek(705) - 1);
+  //     Poke(706, Peek(706) - 1);
+  //     Poke(707, Peek(707)- 1);
+  //     End;
+
+
+  If lst_t1_hit <> t1h Then
+    Begin
+      //eqv := (peek(53760) * peek(53761) +255) Div 512;     //PROBING POKEY IS //SLOWWW!
+      //Poke(53248, 160); //player positions, //move to hotizontal pos
+      Poke(704, $14);
+      //c1:=$14;
+
+
+
+      lst_t1_hit := t1h;
+    End;
+  //2
+  If lst_t2_hit <> t2h  Then
+    Begin
+      //eqv := (peek(53762) * peek(53763)+255) Div 512;          
+      //Poke(53249, 168);
+      Poke(705, $18);
+
+      //move to hotizontal pos          
+      lst_t2_hit := t2h;
+    End;
+  //3
+  If lst_t3_hit <> t3h Then
+    Begin
+      //eqv := (peek(53764) * peek(53765)+255) Div 512;          
+      //Poke(53250, 176);          
+      Poke(706, $dc);
+
+      lst_t3_hit := t3h;
+    End;
+  //4
+  If lst_t4_hit <> t4h  Then
+    Begin
+      //eqv := (peek(53766) * peek(53767)+255) Div 512;          
+      //Poke(53251, 184);        
+      Poke(707, $b6);
+
+      lst_t4_hit := t4h;
+    End;
+
+
 
   //song progress viz  
   // songPos := Peek(song_pos_addr);
@@ -491,7 +533,7 @@ Begin
       For c := 0 To 7 Do
         Begin
           Poke(r0 + c, startChar);
-          
+
           Inc(startChar);
         End;
       Inc(r0, 40);
@@ -519,13 +561,11 @@ Begin
   cursor_col := COL_MARGIN - 1;
   cursor_row := ROW_MARGIN;
   song_selected := false;
-  //
+  gotoxy(0,0);
   WriteInverse(TITLE);
-  DrawOrnament();  
-  //line    
-  For i := 0 To 27 Do Poke(scrBase + 840 + i, 13);
+  DrawOrnament();
   
-    //LOAD DIRECTORY LISTING
+  //LOAD DIRECTORY LISTING
   ListFiles();
 
   While true Do
@@ -535,7 +575,7 @@ Begin
       Until song_selected = true;
 
       LoadSong();
-     
+
 
       // PMG setup
       Poke(54279, PMG_BASE shr 8);
@@ -545,11 +585,7 @@ Begin
       // DMACTL: 3 for double-line + players + missiles ... $0C for quad lines
       Poke(53277, 3);
       // GRACTL: enable players + missiles
-      // player colors
-      Poke(704, $14);
-      Poke(705, $18);
-      Poke(706, $dC);
-      Poke(707, $b6);
+
       // player positions horizontal
       Poke(53248, 160);
       Poke(53249, 168);
@@ -567,8 +603,8 @@ Begin
       ptr := Pointer(PMG_BASE + $380);
       FillChar(ptr^, PMG_PLR_HEIGHT, $ff);
       //end PMG setup
-      
-      
+
+
       SetIntVec(iVBL, @Vbl);
       msx.player  := pointer(ADDR_PLAYER);
       msx.modul   := pointer(ADDR_MD1);
@@ -576,6 +612,12 @@ Begin
       msx.init;
       msx.digi(is15Khz);
       msx.stop();
+
+      //pmg off
+       Poke(53248, 0);
+      Poke(53249, 00);      
+      Poke(53250, 00);      
+       Poke(53251, 0);      
 
       //clean up MD1 data
       ptr := Pointer(ADDR_MD1);
