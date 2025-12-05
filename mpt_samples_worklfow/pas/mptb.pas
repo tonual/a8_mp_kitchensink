@@ -3,15 +3,14 @@
 Uses crt, sysutils, md1;
 
 Const 
-  TITLE = 'POKEY DIGITALS VOL 1';
-  INSTR = 'USE ARROWS & ENTER';
-  PLS_WAIT = 'LAODING...';
+  TITLE = 'POKEY DIGITALS VOL 1';  
+
   //colors
   COLBG   = $2C6;
   COLPF1  = $2C5;
   COLPF2  = $2C8;
   //MPT memory 
-  ADDR_PLAYER   = $5b6e;
+  ADDR_PLAYER   = $5b6e; //DONT MAKE LOWER THEN 5B6E!!!
   //!! check compile -> DATA: $3B35..$5B63 take sesecond part +1 
   ADDR_MD1      = $6499;
   //bold assumption md1 module <= 4096 bytes
@@ -31,14 +30,14 @@ Const
   //custom characters adress pointer, 12KB after samples addr, (must be * 1024) 
   //ornament pos
   ORNAMENT_COL = 28;
-  ORNAMENT_ROW = 4;
+  ORNAMENT_ROW = 0;
   //player
   MPT_SONGPOS_ADDROFF = $921;
   MPT_INSTR_HIT_ADDOFFS = $08F8;
   //+1 for each track (up to 8fb)
   //PMG
-  PMG_BASE = $B800;
-  PMG_PLR_HEIGHT = 64;
+  PMG_BASE = $B800; 
+  PMG_PLR_HEIGHT = 48;
   
 
 
@@ -242,22 +241,16 @@ Var
 Begin    
   Assign(f, filename);
   Reset(f, 1);
-
-  ldr := 10;//loading indicator start columns
-
+  
   Repeat
     p := pointer(addr);
     BlockRead(f, buf, SizeOf(buf), bytesRead);
     Move(buf, p^, bytesRead);
     addr := addr + bytesRead;
-    Inc(ldr);
-    If ldr > 24 Then ldr := 10;
-    Poke(scrBase + 840 + ldr, (peek($d20a) and 1) + 12);//random dots
-    //loader viz    
+    //viz
+    Poke(scrBase + 840 + (peek($d20a) and 14) + 10,  (peek($d20a) and 1) + 12);//random dots
   Until bytesRead = 0;
-  Close(f);
-  //restore line
-  For ldr := 0 To 27 Do Poke(scrBase + 840 + ldr, 13);  
+  Close(f);  
 End;
 
 
@@ -304,17 +297,15 @@ Var
   fullname : string;
 
 Begin
-  Poke(65,0);
-  //silence i/o noise
-  GotoXY(0,22);
-  WriteInverse(PLS_WAIT);
+  Poke(65,0);//silence i/o noise  
+  GotoXY(0,22); WriteInverse('LOADING..');
   //print loading
   is15Khz := true;
   //try .d15 ext first, then .d8
   song_file   := Concat(song_name, '.MD1');
   sample_file := Concat(song_name, D15_EXT);
-  fullname := Concat(DRIVE, sample_file);
-  If (FileExists(fullname) <> true) Then //if not,then it is .d8 ext
+  
+  If (FileExists(Concat(DRIVE, sample_file)) <> true) Then //if not,then it is .d8 ext
     Begin
       sample_file := Concat(song_name, D8_EXT);
       is15Khz := false;
@@ -323,6 +314,9 @@ Begin
   LoadAndRelocateMD1(fullname, ADDR_MD1);
   fullname := Concat(DRIVE, sample_file);
   LoadFileToAddr(fullname, ADDR_SAMPLES);
+  LoadFileToAddr(Concat(DRIVE,'ORNA1.FNT'), ORNA_ADDR);
+  //clear loading text   
+  For i := 0 To 27 Do Poke(scrBase + 840 + i, 13);
 End;
 
 
@@ -340,7 +334,7 @@ Begin
   t2h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 1);
   t3h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 2);
   t4h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 3);
-  //pattPos := peek(ADDR_PLAYER + $092a);
+  pattPos := peek(ADDR_PLAYER + $092a);
 
   If pattPos <> lst_pat_pos Then
     Begin
@@ -516,11 +510,8 @@ Begin
   WriteInverse(TITLE);
   DrawOrnament();  
   //line    
-  For i := 0 To 27 Do
-    Poke(scrBase + 840 + i, 13);
-  //instr
-  GotoXY(0,23);
-  writeln(INSTR);
+  For i := 0 To 27 Do Poke(scrBase + 840 + i, 13);
+  
 
   //LOAD DIRECTORY LISTING
   ListFiles();
@@ -543,10 +534,10 @@ Begin
       Poke(53277, 3);
       // GRACTL: enable players + missiles
       // player colors
-      Poke(704, $34);
-      Poke(705, $28);
-      Poke(706, $EC);
-      Poke(707, $C6);
+      Poke(704, $14);
+      Poke(705, $18);
+      Poke(706, $dC);
+      Poke(707, $b6);
       // player positions horizontal
       Poke(53248, 160);
       Poke(53249, 168);
