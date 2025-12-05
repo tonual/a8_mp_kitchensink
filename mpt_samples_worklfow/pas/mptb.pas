@@ -34,6 +34,7 @@ Const
   //player
   MPT_SONGPOS_ADDROFF = $921;
   MPT_INSTR_HIT_ADDOFFS = $08F8;
+  MPT_TEMPO_ADDOFFS = $01C9;  
   //+1 for each track (up to 8fb)
   //PMG
   PMG_BASE = $B800; 
@@ -59,8 +60,9 @@ Var
   lastSongPos : byte;
   songLength : byte;
   progress: byte;
-
-
+  //
+  qtick, vbldx :byte;
+  
   lst_t1_hit,lst_t2_hit,lst_t3_hit,lst_t4_hit, lst_pat_pos: byte;
   i: byte;
   //
@@ -70,16 +72,16 @@ Var
 {$r mptb.rc}
 
 
-Function GetTrackLength(ModuleAddr: Word): byte;
+// Function GetTrackLength(ModuleAddr: Word): byte;
 
-Var 
-  T1_offset, T2_offset: Word;
-Begin
-  T1_offset := PByte(Pointer(ModuleAddr + $01C0))^ Or (PByte(Pointer(ModuleAddr + $01C4))^ shl 8);
-  T2_offset := PByte(Pointer(ModuleAddr + $01C1))^ Or (PByte(Pointer(ModuleAddr + $01C5))^ shl 8);
-  Result := (T2_offset - T1_offset) shr 1;
+// Var 
+//   T1_offset, T2_offset: Word;
+// Begin
+//   T1_offset := PByte(Pointer(ModuleAddr + $01C0))^ Or (PByte(Pointer(ModuleAddr + $01C4))^ shl 8);
+//   T2_offset := PByte(Pointer(ModuleAddr + $01C1))^ Or (PByte(Pointer(ModuleAddr + $01C5))^ shl 8);
+//   Result := (T2_offset - T1_offset) shr 1;
 
-End;
+// End;
 
 
 Function ReadStrAt(X, Y: Byte): string;
@@ -235,8 +237,7 @@ Var
   f: file;
   p: pointer;
   buf: array [0..255] Of byte;
-  bytesRead: word;
-  ldr: byte;
+  bytesRead: word;  
 
 Begin    
   Assign(f, filename);
@@ -270,9 +271,9 @@ Begin
 
     Begin
       Repeat
-        GotoXY(col,row);
         song_name := GetFileBase(Info.Name);
-        writeln(song_name);
+        GotoXY(col,row);        
+        write(song_name);
         Inc(row);
 
         If row > COL_ITEMS_CNT Then
@@ -315,6 +316,10 @@ Begin
   fullname := Concat(DRIVE, sample_file);
   LoadFileToAddr(fullname, ADDR_SAMPLES);
   LoadFileToAddr(Concat(DRIVE,'ORNA1.FNT'), ORNA_ADDR);
+  //songLength := GetTrackLength(ADDR_MD1);
+  //figure out quarter tick based on tempo
+  qtick := (peek(MPT_TEMPO_ADDOFFS + ADDR_MD1) + 1) shr 1; //halftick shr 1, quartertick shr 2
+  //gfx
   //clear loading text   
   For i := 0 To 27 Do Poke(scrBase + 840 + i, 13);
 End;
@@ -334,19 +339,27 @@ Begin
   t2h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 1);
   t3h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 2);
   t4h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 3);
-  pattPos := peek(ADDR_PLAYER + $092a);
+  //pattPos := peek(ADDR_PLAYER + $092a);
 
-  If pattPos <> lst_pat_pos Then
-    Begin
-      //move players to hotizontal pos 
-      Poke(53248, 00);      
+  Inc(vbldx);
+  
+  
+  if vbldx = qtick Then
+  Begin        
+      Poke(53248, 0);
       Poke(53249, 00);      
       Poke(53250, 00);      
       Poke(53251, 0);      
-      lst_pat_pos := pattPos;
+      vbldx :=0;      
+      
+  End;
+
+  //If pattPos <> lst_pat_pos Then
+    //Begin
+      //lst_pat_pos := pattPos;
 
       If lst_t1_hit <> t1h Then
-        Begin
+        Begin        
           //eqv := (peek(53760) * peek(53761) +255) Div 512;     //PROBING POKEY IS //SLOWWW!
           Poke(53248, 160); //player positions, //move to hotizontal pos
           
@@ -375,7 +388,7 @@ Begin
           lst_t4_hit := t4h;
         End;
 
-    End;
+    //End;
 
   //song progress viz  
   // songPos := Peek(song_pos_addr);
@@ -512,8 +525,7 @@ Begin
   //line    
   For i := 0 To 27 Do Poke(scrBase + 840 + i, 13);
   
-
-  //LOAD DIRECTORY LISTING
+    //LOAD DIRECTORY LISTING
   ListFiles();
 
   While true Do
@@ -523,7 +535,7 @@ Begin
       Until song_selected = true;
 
       LoadSong();
-      songLength := GetTrackLength(ADDR_MD1);
+     
 
       // PMG setup
       Poke(54279, PMG_BASE shr 8);
@@ -555,7 +567,8 @@ Begin
       ptr := Pointer(PMG_BASE + $380);
       FillChar(ptr^, PMG_PLR_HEIGHT, $ff);
       //end PMG setup
-
+      
+      
       SetIntVec(iVBL, @Vbl);
       msx.player  := pointer(ADDR_PLAYER);
       msx.modul   := pointer(ADDR_MD1);
