@@ -357,37 +357,29 @@ Begin
   t4h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 3);
   pattPos := peek(ADDR_PLAYER + $092a);
 
+  //animate dancer here
+  If pattPos <> lst_pat_pos Then
+    Begin
+      lst_pat_pos := pattPos;
+      Poke(53248, (150+peek($d20a) and 14));
+      Poke(53249, (158)+peek($d20a) and 14);
+      Poke(53250, (166+peek($d20a) and 14));
+      Poke(53251, (174+peek($d20a) and 14));  
+  End;
+
+
+  //aniamte PMG bars here
   Inc(vbldx);
-
-
   If vbldx = qtick shl 2 Then
     Begin
-      // Poke(53248, 0);
-      // Poke(53249, 00);      
-      // Poke(53250, 00);      
-      // Poke(53251, 0);      
 
-      // Poke(704, 0);
-      //       Poke(705, 0);
-      //       Poke(706, 0);
-      //       Poke(707, 0);
-
-      Poke(704, Peek(704) - 1);
-      Poke(705, Peek(705) - 1);
-      Poke(706, Peek(706) - 1);
-      Poke(707, Peek(707)- 1);
+      Poke(704, Peek(704) - 2);
+      Poke(705, Peek(705) - 2);
+      Poke(706, Peek(706) - 2);
+      Poke(707, Peek(707)- 2);
+      
       vbldx := 0;
-
     End;
-
-  // If pattPos <> lst_pat_pos Then
-  //   Begin
-  //     lst_pat_pos := pattPos;
-  //       Poke(704, Peek(704) - 1);
-  //     Poke(705, Peek(705) - 1);
-  //     Poke(706, Peek(706) - 1);
-  //     Poke(707, Peek(707)- 1);
-  //     End;
 
 
   If lst_t1_hit <> t1h Then
@@ -595,13 +587,13 @@ Begin
       FillChar(pointer(53256), 4, 0);
       //draw PMG PLAYERS once
       ptr := Pointer(PMG_BASE + $200);
-      FillChar(ptr^, PMG_PLR_HEIGHT, $ff);
+      FillChar(ptr^, PMG_PLR_HEIGHT, $1e);
       ptr := Pointer(PMG_BASE + $280);
-      FillChar(ptr^, PMG_PLR_HEIGHT, $ff);
+      FillChar(ptr^, PMG_PLR_HEIGHT, $0f);
       ptr := Pointer(PMG_BASE + $300);
-      FillChar(ptr^, PMG_PLR_HEIGHT, $ff);
+      FillChar(ptr^, PMG_PLR_HEIGHT, $1e);
       ptr := Pointer(PMG_BASE + $380);
-      FillChar(ptr^, PMG_PLR_HEIGHT, $ff);
+      FillChar(ptr^, PMG_PLR_HEIGHT, $0f);
       //end PMG setup
 
 
