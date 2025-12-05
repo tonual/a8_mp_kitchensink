@@ -33,14 +33,13 @@ Const
   ORNAMENT_COL = 28;
   ORNAMENT_ROW = 4;
   //player
-  SNGPOS_ADDROFF = $921;
-  SNG_INSTR_HIT_BASE = $08F8;
+  MPT_SONGPOS_ADDROFF = $921;
+  MPT_INSTR_HIT_ADDOFFS = $08F8;
   //+1 for each track (up to 8fb)
   //PMG
   PMG_BASE = $B800;
-  P_HEIGHT = 64;
-  GRACTL = $D01D;
-  DMACTL = $D400;
+  PMG_PLR_HEIGHT = 64;
+  
 
 
 Var 
@@ -238,13 +237,13 @@ Var
   p: pointer;
   buf: array [0..255] Of byte;
   bytesRead: word;
-  ldr,r: byte;
+  ldr: byte;
 
-Begin
-  ldr := 10;
-  //loading indicator start columns
+Begin    
   Assign(f, filename);
   Reset(f, 1);
+
+  ldr := 10;//loading indicator start columns
 
   Repeat
     p := pointer(addr);
@@ -253,15 +252,12 @@ Begin
     addr := addr + bytesRead;
     Inc(ldr);
     If ldr > 24 Then ldr := 10;
-    Poke(scrBase + 840 + ldr, (peek($d20a) and 1) + 12);
+    Poke(scrBase + 840 + ldr, (peek($d20a) and 1) + 12);//random dots
     //loader viz    
   Until bytesRead = 0;
   Close(f);
-
-  For ldr := 0 To 27 Do
-    Poke(scrBase + 840 + ldr, 13);
   //restore line
-
+  For ldr := 0 To 27 Do Poke(scrBase + 840 + ldr, 13);  
 End;
 
 
@@ -334,74 +330,54 @@ Procedure Efx;
 //player visualization and song progress
 
 Var 
-  pattPos, t1h,t2h,t3h,t4h,eqv : byte;
+  pattPos, t1h,t2h,t3h,t4h : byte;
 
 
 Begin
   //rhythmic viz
-  t1h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER);
+  t1h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER);
   //when track 1-4 encounters note to play
-  t2h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 1);
-  t3h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 2);
-  t4h := peek(SNG_INSTR_HIT_BASE + ADDR_PLAYER + 3);
-  pattPos := peek(ADDR_PLAYER + $092a);
+  t2h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 1);
+  t3h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 2);
+  t4h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 3);
+  //pattPos := peek(ADDR_PLAYER + $092a);
 
   If pattPos <> lst_pat_pos Then
     Begin
-      Poke(53248, 00);
-      //move to hotizontal pos
-      Poke(53249, 00);
-      //move to hotizontal pos
-      Poke(53250, 00);
-      //move to hotizontal pos
-      Poke(53251, 0);
-      //move to hotizontal pos
+      //move players to hotizontal pos 
+      Poke(53248, 00);      
+      Poke(53249, 00);      
+      Poke(53250, 00);      
+      Poke(53251, 0);      
       lst_pat_pos := pattPos;
 
       If lst_t1_hit <> t1h Then
         Begin
-          //eqv := (peek(53760) * peek(53761) +255) Div 512;
-          //freq * valume normalized for screen
-          //FillChar(P0, P_HEIGHT , 0);        
-          //FillChar(P0, P_HEIGHT, $ff);
-          Poke(53248, 160); //player positions
-          //move to hotizontal pos
+          //eqv := (peek(53760) * peek(53761) +255) Div 512;     //PROBING POKEY IS //SLOWWW!
+          Poke(53248, 160); //player positions, //move to hotizontal pos
+          
           lst_t1_hit := t1h;
         End;
       //2
       If lst_t2_hit <> t2h  Then
         Begin
-          //eqv := (peek(53762) * peek(53763)+255) Div 512;
-          //FillChar(P1, P_HEIGHT, 0);
+          //eqv := (peek(53762) * peek(53763)+255) Div 512;          
           Poke(53249, 168);
-          //move to hotizontal pos
-
-
-        Poke(48582, 192);
-
+          //move to hotizontal pos          
           lst_t2_hit := t2h;
         End;
       //3
       If lst_t3_hit <> t3h Then
         Begin
-          //eqv := (peek(53764) * peek(53765)+255) Div 512;
-          //FillChar(P2, P_HEIGHT, 0);
-          Poke(53250, 176);
-          //move to hotizontal pos
-
-
-          
-          //          FillChar(P2, P_HEIGHT, $ff);
+          //eqv := (peek(53764) * peek(53765)+255) Div 512;          
+          Poke(53250, 176);          
           lst_t3_hit := t3h;
         End;
       //4
       If lst_t4_hit <> t4h  Then
         Begin
-          //eqv := (peek(53766) * peek(53767)+255) Div 512;
-          //FillChar(P3, P_HEIGHT, 0);
-          Poke(53251, 184);
-          //move to hotizontal pos
-          //        FillChar(P3, P_HEIGHT, $ff);
+          //eqv := (peek(53766) * peek(53767)+255) Div 512;          
+          Poke(53251, 184);        
           lst_t4_hit := t4h;
         End;
 
@@ -412,7 +388,7 @@ Begin
   // If lastSongPos <> songPos Then
   //   Begin
   //     lastSongPos := songPos;
-  //     progress := (27 * songPos shr 1) Div songLength;
+  //     progress := (27 * songPos) div (songLength shl 1);
   //     for i := 0 to progress do Poke(scrBase + 840 + i, 12);      
   //   End;
 End;
@@ -531,7 +507,7 @@ Begin
   //Tell ANTIC our font is the "official" one
   Poke($2F4, Hi(CHARSET_ADDR));
   //def curren song pos address
-  song_pos_addr := ADDR_PLAYER + SNGPOS_ADDROFF;
+  song_pos_addr := ADDR_PLAYER + MPT_SONGPOS_ADDROFF;
   //browser cursor
   cursor_col := COL_MARGIN - 1;
   cursor_row := ROW_MARGIN;
@@ -561,8 +537,7 @@ Begin
       // PMG setup
       Poke(54279, PMG_BASE shr 8);
       Poke(53275, 0);
-      //over chracters
-      // PMBASE
+      //over chracters      
       Poke(559,   46);
       // DMACTL: 3 for double-line + players + missiles ... $0C for quad lines
       Poke(53277, 3);
@@ -579,15 +554,15 @@ Begin
       Poke(53251, 184);
       // normal size
       FillChar(pointer(53256), 4, 0);
-      //draw  
-      ptr := Pointer(PMG_BASE + 512);
-      FillChar(ptr^, P_HEIGHT, $ff);
-      ptr := Pointer(PMG_BASE + 640);
-      FillChar(ptr^, P_HEIGHT, $ff);
-      ptr := Pointer(PMG_BASE + 768);
-      FillChar(ptr^, P_HEIGHT, $ff);
-      ptr := Pointer(PMG_BASE + 896);
-      FillChar(ptr^, P_HEIGHT, $ff);
+      //draw PMG PLAYERS once
+      ptr := Pointer(PMG_BASE + $200);
+      FillChar(ptr^, PMG_PLR_HEIGHT, $ff);
+      ptr := Pointer(PMG_BASE + $280);
+      FillChar(ptr^, PMG_PLR_HEIGHT, $ff);
+      ptr := Pointer(PMG_BASE + $300);
+      FillChar(ptr^, PMG_PLR_HEIGHT, $ff);
+      ptr := Pointer(PMG_BASE + $380);
+      FillChar(ptr^, PMG_PLR_HEIGHT, $ff);
       //end PMG setup
 
       SetIntVec(iVBL, @Vbl);
