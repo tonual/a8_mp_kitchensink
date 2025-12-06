@@ -44,16 +44,17 @@ Const
   PMG_PLR_HEIGHT = 127;
   //
   //dancer
-  dncr_anim : array[0..7,0..7] Of byte = 
+  dncr_anim : array[0..8,0..7] Of byte = 
   (
-   ( 0,  1,  8,  9, 16, 17, 24, 25),  // base block 0
-  ( 2,  3, 10, 11, 18, 19, 26, 27),  // base block 1
+  ( 0,  1,  8,  9, 16, 17, 24, 25),  // base block 0
+  ( 34, 35, 42, 43, 50, 51, 58, 59),  // base block 5
+  ( 38, 39, 46, 47, 54, 55, 62, 63),   // base block 7
   ( 4,  5, 12, 13, 20, 21, 28, 29),  // base block 2
+  ( 0,  1,  8,  9, 16, 17, 24, 25),  // base block 0
   ( 6,  7, 14, 15, 22, 23, 30, 31),  // base block 3
-  (32, 33, 40, 41, 48, 49, 56, 57),  // base block 4  (+32)
-  (34, 35, 42, 43, 50, 51, 58, 59),  // base block 5
-  (36, 37, 44, 45, 52, 53, 60, 61),  // base block 6
-  (38, 39, 46, 47, 54, 55, 62, 63)   // base block 7    
+  ( 2,  3, 10, 11, 18, 19, 26, 27),  // base block 1
+  ( 32, 33, 40, 41, 48, 49, 56, 57),  // base block 4
+  ( 36, 37, 44, 45, 52, 53, 60, 61)  // base block 6          
   );
 
 
@@ -77,6 +78,7 @@ Var
   progress: byte;
   //
   qtick, vbldx : byte;
+  qtick2, vbldx2 : byte;
 
   lst_t1_hit,lst_t2_hit,lst_t3_hit,lst_t4_hit, lst_pat_pos: byte;
   i: byte;
@@ -181,10 +183,14 @@ Var
   i        : byte;
   tmp      : word;
   ptn      : pointer;
-  buffer   : array[0..1024] Of byte;
+  buffer   : array[0..4096] Of byte absolute ADDR_SAMPLES;//coz samples data will use this space later anyway
   //are there bigger modules? (how to recycle memory from this buffer btw)  
 
 Begin
+  //clear buff
+  ptr := Pointer(ADDR_SAMPLES);
+  FillChar(Ptr^, 4096, 0);
+
   Assign(f, filename);
   Reset(f, 1);
   read_cnt := 0;
@@ -342,6 +348,11 @@ Begin
     End;
   fullname := Concat(DRIVE, song_file);
   LoadAndRelocateMD1(fullname, ADDR_MD1);
+
+  //clear samples ram  
+  ptr := Pointer(ADDR_SAMPLES);
+  FillChar(Ptr^, 12288, 0);
+
   fullname := Concat(DRIVE, sample_file);
   LoadFileToAddr(fullname, ADDR_SAMPLES);
   //LoadFileToAddr(Concat(DRIVE,'ORNA1.FNT'), ORNA_ADDR);
@@ -360,12 +371,20 @@ End;
 procedure DancerFrame(frame: byte);
 
 begin
-  
-  for i := 0 to 3 do begin
-    Poke(dncr_pos    , dncr_anim[frame][i*2]   + 192);
-    Poke(dncr_pos + 1, dncr_anim[frame][i*2+1] + 192);
+    
+    Poke(dncr_pos    , dncr_anim[frame][0]   + 192);
+    Poke(dncr_pos + 1, dncr_anim[frame][1] + 192);
     dncr_pos := dncr_pos + 40;
-  end;      
+    Poke(dncr_pos    , dncr_anim[frame][1*2]   + 192);
+    Poke(dncr_pos + 1, dncr_anim[frame][1*2+1] + 192);
+    dncr_pos := dncr_pos + 40;
+    Poke(dncr_pos    , dncr_anim[frame][2*2]   + 192);
+    Poke(dncr_pos + 1, dncr_anim[frame][2*2+1] + 192);
+    dncr_pos := dncr_pos + 40;
+    Poke(dncr_pos    , dncr_anim[frame][3*2]   + 192);
+    Poke(dncr_pos + 1, dncr_anim[frame][3*2+1] + 192);
+    dncr_pos := dncr_pos + 40;
+     
 End;
 
 
@@ -373,7 +392,7 @@ Procedure Efx;
 //player visualization and song progress
 
 Var 
-  pattPos, t1h,t2h,t3h,t4h : byte;
+  pattPos, t1h,t2h,t3h,t4h, doofs : byte;
 
 
 Begin
@@ -393,13 +412,29 @@ Begin
       Poke(53249, (158+peek($d20a) and 14));
       Poke(53250, (166+peek($d20a) and 14));
       Poke(53251, (174+peek($d20a) and 14));  
-      //
-      dncr_pos := scrBase + ORNAMENT_ROW * 40 + ORNAMENT_COL+ (peek($d20a) and 3);
+         
+
+      //DANCER
+      doofs := peek($d20a) and 3;
+      dncr_pos := scrBase + 828 + doofs * 2;//bottom of the scren
+      dncr_frm := dncr_frm + doofs;
+      dncr_frm := dncr_frm mod 7; 
       DancerFrame(dncr_frm);
-      Inc(dncr_frm);
-      dncr_frm := dncr_frm mod 7;    
+      Inc(dncr_frm);  
+      
+      
+      // dncr_pos := scrBase + 828;//bottom of the scren      
+      // dncr_frm := dncr_frm mod 8; 
+      // DancerFrame(dncr_frm);
+      // Inc(dncr_frm);  
     End;
 
+    
+    
+    
+     
+   
+   
 
   //aniamte PMG bars here
   Inc(vbldx);
@@ -411,6 +446,8 @@ Begin
       Poke(706, Peek(706) - 2);
       Poke(707, Peek(707)- 2);
       vbldx := 0;      
+
+      
     End;
 
 
@@ -572,6 +609,9 @@ Begin
 
   While true Do
     Begin
+
+  
+
       Repeat
         Browse()
       Until song_selected = true;
@@ -599,12 +639,17 @@ Begin
       ptr := Pointer(PMG_BASE + $200);
       FillChar(ptr^, PMG_PLR_HEIGHT, $1e);
       ptr := Pointer(PMG_BASE + $280);
-      FillChar(ptr^, PMG_PLR_HEIGHT, $0f);
+      FillChar(ptr^, PMG_PLR_HEIGHT, $ff);
       ptr := Pointer(PMG_BASE + $300);
       FillChar(ptr^, PMG_PLR_HEIGHT, $1e);
       ptr := Pointer(PMG_BASE + $380);
-      FillChar(ptr^, PMG_PLR_HEIGHT, $0f);
+      FillChar(ptr^, PMG_PLR_HEIGHT, $ff);
       //end PMG setup
+
+      //invisible font
+      Poke(COLPF2, $52);  // or $62 for violet
+      Poke(COLPF1, $32);  // or $42 for pink-red
+      Poke(COLBG, $52);  // or $62 to match background
 
       SetIntVec(iVBL, @Vbl);
       msx.player  := pointer(ADDR_PLAYER);
@@ -620,6 +665,12 @@ Begin
       Poke(53249, 00);
       Poke(53250, 00);
       Poke(53251, 0);
+
+      //normal col
+        //backgorund
+      Poke(COLBG, $02);
+      Poke(COLPF1, $1a);
+      Poke(COLPF2, $02);
 
       //clean up MD1 data
       ptr := Pointer(ADDR_MD1);
