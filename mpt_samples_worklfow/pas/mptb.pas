@@ -1,5 +1,7 @@
 {$DEFINE BASICOFF}
 
+
+
 Uses crt, sysutils, md1;
 
 Const 
@@ -40,7 +42,19 @@ Const
   //PMG
   PMG_BASE = $B800;
   PMG_PLR_HEIGHT = 127;
-
+  //
+  //dancer
+  dncr_anim : array[0..7,0..7] Of byte = 
+  (
+   ( 0,  1,  8,  9, 16, 17, 24, 25),  // base block 0
+  ( 2,  3, 10, 11, 18, 19, 26, 27),  // base block 1
+  ( 4,  5, 12, 13, 20, 21, 28, 29),  // base block 2
+  ( 6,  7, 14, 15, 22, 23, 30, 31),  // base block 3
+  (32, 33, 40, 41, 48, 49, 56, 57),  // base block 4  (+32)
+  (34, 35, 42, 43, 50, 51, 58, 59),  // base block 5
+  (36, 37, 44, 45, 52, 53, 60, 61),  // base block 6
+  (38, 39, 46, 47, 54, 55, 62, 63)   // base block 7    
+  );
 
 
 Var 
@@ -67,9 +81,12 @@ Var
   lst_t1_hit,lst_t2_hit,lst_t3_hit,lst_t4_hit, lst_pat_pos: byte;
   i: byte;
   col: byte;
+  //dancer frame cnt
+  dncr_frm : byte;
+  dncr_pos: word;
 
   //
-  md1module_size : word;
+  //md1module_size : word;
 
 
 {$r mptb.rc}
@@ -81,7 +98,11 @@ Var
   //   T1_offset, T2_offset: Word;
   // Begin
 
+
+
 //   T1_offset := PByte(Pointer(ModuleAddr + $01C0))^ Or (PByte(Pointer(ModuleAddr + $01C4))^ shl 8);
+
+
 
 //   T2_offset := PByte(Pointer(ModuleAddr + $01C1))^ Or (PByte(Pointer(ModuleAddr + $01C5))^ shl 8);
   //   Result := (T2_offset - T1_offset) shr 1;
@@ -160,7 +181,7 @@ Var
   i        : byte;
   tmp      : word;
   ptn      : pointer;
-  buffer   : array[0..4096] Of byte;
+  buffer   : array[0..1024] Of byte;
   //are there bigger modules? (how to recycle memory from this buffer btw)  
 
 Begin
@@ -231,7 +252,7 @@ Begin
   //Copy the relocated module to its final location
   ptn := Pointer(new_address);
   Move(buffer[ofs], ptn, data_len);
-  md1module_size := read_cnt;
+  //md1module_size := read_cnt;
   //TODO read_cnt redundant
 End;
 
@@ -323,7 +344,7 @@ Begin
   LoadAndRelocateMD1(fullname, ADDR_MD1);
   fullname := Concat(DRIVE, sample_file);
   LoadFileToAddr(fullname, ADDR_SAMPLES);
-  LoadFileToAddr(Concat(DRIVE,'ORNA1.FNT'), ORNA_ADDR);
+  //LoadFileToAddr(Concat(DRIVE,'ORNA1.FNT'), ORNA_ADDR);
   //songLength := GetTrackLength(ADDR_MD1);
   //figure out quarter tick based on tempo
   qtick := (peek(MPT_TEMPO_ADDOFFS + ADDR_MD1) + 1) shr 1;
@@ -336,9 +357,16 @@ End;
 
 
 
+procedure DancerFrame(frame: byte);
 
-
-
+begin
+  
+  for i := 0 to 3 do begin
+    Poke(dncr_pos    , dncr_anim[frame][i*2]   + 192);
+    Poke(dncr_pos + 1, dncr_anim[frame][i*2+1] + 192);
+    dncr_pos := dncr_pos + 40;
+  end;      
+End;
 
 
 Procedure Efx;
@@ -350,8 +378,8 @@ Var
 
 Begin
   //rhythmic viz
-  t1h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER);
   //when track 1-4 encounters note to play
+  t1h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER);  
   t2h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 1);
   t3h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 2);
   t4h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 3);
@@ -362,10 +390,15 @@ Begin
     Begin
       lst_pat_pos := pattPos;
       Poke(53248, (150+peek($d20a) and 14));
-      Poke(53249, (158)+peek($d20a) and 14);
+      Poke(53249, (158+peek($d20a) and 14));
       Poke(53250, (166+peek($d20a) and 14));
       Poke(53251, (174+peek($d20a) and 14));  
-  End;
+      //
+      dncr_pos := scrBase + ORNAMENT_ROW * 40 + ORNAMENT_COL+ (peek($d20a) and 3);
+      DancerFrame(dncr_frm);
+      Inc(dncr_frm);
+      dncr_frm := dncr_frm mod 7;    
+    End;
 
 
   //aniamte PMG bars here
@@ -377,8 +410,7 @@ Begin
       Poke(705, Peek(705) - 2);
       Poke(706, Peek(706) - 2);
       Poke(707, Peek(707)- 2);
-      
-      vbldx := 0;
+      vbldx := 0;      
     End;
 
 
@@ -433,6 +465,8 @@ Begin
   //     for i := 0 to progress do Poke(scrBase + 840 + i, 12);      
   //   End;
 End;
+
+
 
 
 Procedure Vbl;
@@ -509,34 +543,7 @@ Begin
   Sound(0, 0, 0, 0);
 End;
 
-
-Procedure DrawOrnament();
-
-Var 
-  c, startChar: byte;
-  r0,r1 : word;
-
 Begin
-  startChar := 64;
-  r0 := scrBase + ORNAMENT_ROW * 40 + ORNAMENT_COL;
-  r1 := scrBase + (ORNAMENT_ROW + 8) * 40;
-  While r0 <= r1 Do
-    Begin
-      For c := 0 To 7 Do
-        Begin
-          Poke(r0 + c, startChar);
-
-          Inc(startChar);
-        End;
-      Inc(r0, 40);
-    End;
-
-End;
-
-
-
-Begin
-
   ClrScr;
   CursorOff;
   //backgorund
@@ -555,8 +562,11 @@ Begin
   song_selected := false;
   gotoxy(0,0);
   WriteInverse(TITLE);
-  DrawOrnament();
-  
+
+  //dancer pos
+  dncr_pos := scrBase + ORNAMENT_ROW * 40 + ORNAMENT_COL;
+  //DancerFrame(7);
+
   //LOAD DIRECTORY LISTING
   ListFiles();
 
@@ -596,20 +606,20 @@ Begin
       FillChar(ptr^, PMG_PLR_HEIGHT, $0f);
       //end PMG setup
 
-
       SetIntVec(iVBL, @Vbl);
       msx.player  := pointer(ADDR_PLAYER);
       msx.modul   := pointer(ADDR_MD1);
       msx.sample  := pointer(ADDR_SAMPLES);
       msx.init;
+        
       msx.digi(is15Khz);
       msx.stop();
 
       //pmg off
-       Poke(53248, 0);
-      Poke(53249, 00);      
-      Poke(53250, 00);      
-       Poke(53251, 0);      
+      Poke(53248, 0);
+      Poke(53249, 00);
+      Poke(53250, 00);
+      Poke(53251, 0);
 
       //clean up MD1 data
       ptr := Pointer(ADDR_MD1);
