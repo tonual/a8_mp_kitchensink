@@ -417,30 +417,27 @@ Begin
     End;
 
 
-  Inc(vbldx2);
+ 
   
   If vbldx2 = qtick Then
     Begin
       //DANCER
-      //doofs := peek($d20a) And 3;
-      Inc(doofs);
-      doofs := doofs mod 4;
-      dncr_pos := scrBase + 828 + doofs * 2;
+      doofs := peek($d20a) And 2;
+      //Inc(doofs);
+    // doofs := doofs mod 3;
+      dncr_pos := scrBase + 827 + doofs*2;
       //bottom of the scren
       //dncr_frm := dncr_frm + doofs;
       dncr_frm := dncr_frm Mod 7;
 
-      //dance frmaer st
-      
+      //dance frmaer st      
       For i := 0 To 3 Do
         Begin
-          Poke(dncr_pos    , dncr_anim[dncr_frm][i*2]   + 192);
-          Poke(dncr_pos + 1, dncr_anim[dncr_frm][i*2+1] + 192);
+          Poke(dncr_pos    , dncr_anim[dncr_frm][i*2]   + 64);
+          Poke(dncr_pos + 1, dncr_anim[dncr_frm][i*2+1] + 64);
           dncr_pos := dncr_pos + 40;
         End;
       //dnacer frm end
-
-
       Inc(dncr_frm);
       vbldx2 := 0;
     End;
@@ -451,6 +448,7 @@ Begin
   Inc(vbldx);
   If vbldx = qtick shl 2 Then
     Begin
+     Inc(vbldx2);
 
       Poke(704, Peek(704) - 2);
       Poke(705, Peek(705) - 2);
@@ -579,8 +577,8 @@ Begin
     155: //ENTER - sleltect song, make inversed
          Begin
            song_selected := true;
-           //GotoXY(cursor_col + 1, cursor_row);
-           //WriteInverse(song_name);
+           GotoXY(cursor_col + 1, cursor_row);
+           WriteInverse(song_name);
          End;
   End;
   //BLIP
@@ -594,7 +592,7 @@ Begin
   CursorOff;
   GetIntVec(iVBL, OldVBL);
   //backgorund
-  Poke(COLBG, $1a);
+  Poke(COLBG, $06);
   Poke(COLPF1, $02);
   Poke(COLPF2, $02);
   //
