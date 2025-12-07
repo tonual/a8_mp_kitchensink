@@ -1,11 +1,9 @@
 {$DEFINE BASICOFF}
 
-
-
 Uses crt, sysutils, md1;
 
 Const 
-  TITLE = 'POKEY DIGITALS VOL 1';
+  //TITLE = 'POKEY DIGITALS VOL 1';
 
   //colors
   COLBG   = $2C6;
@@ -41,21 +39,22 @@ Const
   //+1 for each track (up to 8fb)
   //PMG
   PMG_BASE = $B800;
-  PMG_PLR_HEIGHT = 127;
+  PMG_PLR_HEIGHT = 112;
   //
   //dancer
   dncr_anim : array[0..8,0..7] Of byte = 
-  (
-  ( 0,  1,  8,  9, 16, 17, 24, 25),  // base block 0
-  ( 34, 35, 42, 43, 50, 51, 58, 59),  // base block 5
-  ( 38, 39, 46, 47, 54, 55, 62, 63),   // base block 7
-  ( 4,  5, 12, 13, 20, 21, 28, 29),  // base block 2
-  ( 0,  1,  8,  9, 16, 17, 24, 25),  // base block 0
-  ( 6,  7, 14, 15, 22, 23, 30, 31),  // base block 3
-  ( 2,  3, 10, 11, 18, 19, 26, 27),  // base block 1
-  ( 32, 33, 40, 41, 48, 49, 56, 57),  // base block 4
-  ( 36, 37, 44, 45, 52, 53, 60, 61)  // base block 6          
-  );
+                                         (
+                ( 0,  1,  8,  9, 16, 17, 24, 25),  // base block 0
+                ( 34, 35, 42, 43, 50, 51, 58, 59),  // base block 5
+                ( 38, 39, 46, 47, 54, 55, 62, 63),   // base block 7
+                ( 4,  5, 12, 13, 20, 21, 28, 29),  // base block 2
+                ( 0,  1,  8,  9, 16, 17, 24, 25),  // base block 0
+                ( 6,  7, 14, 15, 22, 23, 30, 31),  // base block 3
+                ( 2,  3, 10, 11, 18, 19, 26, 27),  // base block 1
+                ( 32, 33, 40, 41, 48, 49, 56, 57),  // base block 4
+                ( 36, 37, 44, 45, 52, 53, 60, 61)
+                                         // base block 6          
+                                         );
 
 
 Var 
@@ -93,22 +92,15 @@ Var
 
 {$r mptb.rc}
 
-
   // Function GetTrackLength(ModuleAddr: Word): byte;
-
   // Var 
   //   T1_offset, T2_offset: Word;
   // Begin
 
-
-
 //   T1_offset := PByte(Pointer(ModuleAddr + $01C0))^ Or (PByte(Pointer(ModuleAddr + $01C4))^ shl 8);
-
-
 
 //   T2_offset := PByte(Pointer(ModuleAddr + $01C1))^ Or (PByte(Pointer(ModuleAddr + $01C5))^ shl 8);
   //   Result := (T2_offset - T1_offset) shr 1;
-
   // End;
 
 
@@ -144,7 +136,6 @@ End;
 
 
 Procedure WriteInverse(s: String);
-
 Var 
   i: byte;
 Begin
@@ -152,6 +143,9 @@ Begin
     write(chr(byte(s[i]) + 128));
   write(chr(155));
 End;
+
+
+
 
 
 Function GetFileBase(fname: TString): string;
@@ -183,13 +177,10 @@ Var
   i        : byte;
   tmp      : word;
   ptn      : pointer;
-  buffer   : array[0..4096] Of byte absolute ADDR_SAMPLES;//coz samples data will use this space later anyway
-  //are there bigger modules? (how to recycle memory from this buffer btw)  
+  buffer   : array[0..4096] Of byte;
+
 
 Begin
-  //clear buff
-  ptr := Pointer(ADDR_SAMPLES);
-  FillChar(Ptr^, 4096, 0);
 
   Assign(f, filename);
   Reset(f, 1);
@@ -280,9 +271,9 @@ Begin
     BlockRead(f, buf, SizeOf(buf), bytesRead);
     Move(buf, p^, bytesRead);
     addr := addr + bytesRead;
-    //viz
-    Poke(scrBase + 880 + (peek($d20a) and 14) + 10,  (peek($d20a) and 1) + 12);
-    //random dots
+    //viz/random dots
+    //Poke(scrBase + 880 + (peek($d20a) and 14) + 10,  (peek($d20a) and 1) + 12);
+
   Until bytesRead = 0;
   Close(f);
 End;
@@ -334,7 +325,7 @@ Begin
   Poke(65,0);
   //silence i/o noise  
   GotoXY(0,23);
-  WriteInverse('LOADING..');
+  //WriteInverse('LOADING..');
   //print loading
   is15Khz := true;
   //try .d15 ext first, then .d8
@@ -360,32 +351,31 @@ Begin
   //figure out quarter tick based on tempo
   qtick := (peek(MPT_TEMPO_ADDOFFS + ADDR_MD1) + 1) shr 1;
   //halftick shr 1, quartertick shr 2
-  //gfx
+
+
   //clear loading text   
-  For i := 0 To 27 Do
-    Poke(scrBase + 880 + i, 0);
+  //For i := 0 To 27 Do
+  //Poke(scrBase + 880 + i, 0);
 End;
 
 
 
-procedure DancerFrame(frame: byte);
 
-begin
-    
-    Poke(dncr_pos    , dncr_anim[frame][0]   + 192);
-    Poke(dncr_pos + 1, dncr_anim[frame][1] + 192);
-    dncr_pos := dncr_pos + 40;
-    Poke(dncr_pos    , dncr_anim[frame][1*2]   + 192);
-    Poke(dncr_pos + 1, dncr_anim[frame][1*2+1] + 192);
-    dncr_pos := dncr_pos + 40;
-    Poke(dncr_pos    , dncr_anim[frame][2*2]   + 192);
-    Poke(dncr_pos + 1, dncr_anim[frame][2*2+1] + 192);
-    dncr_pos := dncr_pos + 40;
-    Poke(dncr_pos    , dncr_anim[frame][3*2]   + 192);
-    Poke(dncr_pos + 1, dncr_anim[frame][3*2+1] + 192);
-    dncr_pos := dncr_pos + 40;
-     
-End;
+
+// Poke(dncr_pos    , dncr_anim[frame][0]   + 192);
+// Poke(dncr_pos + 1, dncr_anim[frame][1] + 192);
+// dncr_pos := dncr_pos + 40;
+// Poke(dncr_pos    , dncr_anim[frame][1*2]   + 192);
+// Poke(dncr_pos + 1, dncr_anim[frame][1*2+1] + 192);
+// dncr_pos := dncr_pos + 40;
+// Poke(dncr_pos    , dncr_anim[frame][2*2]   + 192);
+// Poke(dncr_pos + 1, dncr_anim[frame][2*2+1] + 192);
+// dncr_pos := dncr_pos + 40;
+// Poke(dncr_pos    , dncr_anim[frame][3*2]   + 192);
+// Poke(dncr_pos + 1, dncr_anim[frame][3*2+1] + 192);
+// dncr_pos := dncr_pos + 40;
+
+
 
 
 Procedure Efx;
@@ -394,11 +384,10 @@ Procedure Efx;
 Var 
   pattPos, t1h,t2h,t3h,t4h, doofs : byte;
 
-
 Begin
   //rhythmic viz
   //when track 1-4 encounters note to play
-  t1h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER);  
+  t1h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER);
   t2h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 1);
   t3h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 2);
   t4h := peek(MPT_INSTR_HIT_ADDOFFS + ADDR_PLAYER + 3);
@@ -411,30 +400,33 @@ Begin
       Poke(53248, (150+peek($d20a) and 14));
       Poke(53249, (158+peek($d20a) and 14));
       Poke(53250, (166+peek($d20a) and 14));
-      Poke(53251, (174+peek($d20a) and 14));  
-         
+      Poke(53251, (174+peek($d20a) and 14));
 
       //DANCER
-      doofs := peek($d20a) and 3;
-      dncr_pos := scrBase + 828 + doofs * 2;//bottom of the scren
+      doofs := peek($d20a) And 3;      
+      dncr_pos := scrBase + 828 + doofs * 2;
+      //bottom of the scren
       dncr_frm := dncr_frm + doofs;
-      dncr_frm := dncr_frm mod 7; 
-      DancerFrame(dncr_frm);
-      Inc(dncr_frm);  
-      
-      
+      dncr_frm := dncr_frm Mod 7;
+
+      //dance frmaer st
+      ptr := @dncr_anim[dncr_frm][0];
+      For i := 0 To 3 Do
+        Begin
+          Poke(dncr_pos    , dncr_anim[dncr_frm][i*2]   + 192);
+          Poke(dncr_pos + 1, dncr_anim[dncr_frm][i*2+1] + 192);
+          dncr_pos := dncr_pos + 40;
+        End;
+      //dnacer frm end
+
+
+      Inc(dncr_frm);
+
       // dncr_pos := scrBase + 828;//bottom of the scren      
       // dncr_frm := dncr_frm mod 8; 
       // DancerFrame(dncr_frm);
       // Inc(dncr_frm);  
     End;
-
-    
-    
-    
-     
-   
-   
 
   //aniamte PMG bars here
   Inc(vbldx);
@@ -445,9 +437,7 @@ Begin
       Poke(705, Peek(705) - 2);
       Poke(706, Peek(706) - 2);
       Poke(707, Peek(707)- 2);
-      vbldx := 0;      
-
-      
+      vbldx := 0;
     End;
 
 
@@ -571,7 +561,7 @@ Begin
          Begin
            song_selected := true;
            GotoXY(cursor_col + 1, cursor_row);
-           WriteInverse(song_name);
+           //WriteInverse(song_name);
          End;
   End;
   //BLIP
@@ -584,8 +574,8 @@ Begin
   ClrScr;
   CursorOff;
   //backgorund
-  Poke(COLBG, $02);
-  Poke(COLPF1, $1a);
+  Poke(COLBG, $1a);
+  Poke(COLPF1, $02);
   Poke(COLPF2, $02);
   //
   scrBase := DPeek(88);
@@ -598,7 +588,7 @@ Begin
   cursor_row := ROW_MARGIN;
   song_selected := false;
   gotoxy(0,0);
-  WriteInverse(TITLE);
+  //WriteInverse(TITLE);
 
   //dancer pos
   dncr_pos := scrBase + ORNAMENT_ROW * 40 + ORNAMENT_COL;
@@ -609,16 +599,11 @@ Begin
 
   While true Do
     Begin
-
-  
-
       Repeat
         Browse()
       Until song_selected = true;
 
       LoadSong();
-
-
       // PMG setup
       Poke(54279, PMG_BASE shr 8);
       Poke(53275, 0);
@@ -629,10 +614,10 @@ Begin
       // GRACTL: enable players + missiles
 
       // player positions horizontal
-      Poke(53248, 160);
-      Poke(53249, 168);
-      Poke(53250, 176);
-      Poke(53251, 184);
+      // Poke(53248, 160);
+      // Poke(53249, 168);
+      // Poke(53250, 176);
+      // Poke(53251, 184);
       // normal size
       FillChar(pointer(53256), 4, 0);
       //draw PMG PLAYERS once
@@ -646,31 +631,32 @@ Begin
       FillChar(ptr^, PMG_PLR_HEIGHT, $ff);
       //end PMG setup
 
-      //invisible font
-      Poke(COLPF2, $52);  // or $62 for violet
-      Poke(COLPF1, $32);  // or $42 for pink-red
-      Poke(COLBG, $52);  // or $62 to match background
+      //invisible font backgound
+      // Poke(COLPF2, $52);      
+      // Poke(COLPF1, $32);      
+      // Poke(COLBG, $52);
+
 
       SetIntVec(iVBL, @Vbl);
       msx.player  := pointer(ADDR_PLAYER);
       msx.modul   := pointer(ADDR_MD1);
       msx.sample  := pointer(ADDR_SAMPLES);
       msx.init;
-        
+
       msx.digi(is15Khz);
       msx.stop();
 
       //pmg off
-      Poke(53248, 0);
-      Poke(53249, 00);
-      Poke(53250, 00);
-      Poke(53251, 0);
+      // Poke(53248, 0);
+      // Poke(53249, 00);
+      // Poke(53250, 00);
+      // Poke(53251, 0);
 
       //normal col
-        //backgorund
-      Poke(COLBG, $02);
-      Poke(COLPF1, $1a);
-      Poke(COLPF2, $02);
+      //backgorund
+      // Poke(COLBG, $02);
+      // Poke(COLPF1, $1a);
+      // Poke(COLPF2, $02);
 
       //clean up MD1 data
       ptr := Pointer(ADDR_MD1);
