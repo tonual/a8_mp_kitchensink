@@ -23,7 +23,7 @@ Const
   //browser
   COL_ITEMS_CNT = 21;
   COL_WIDTH   = 8;
-  COL_MARGIN  = 1;
+  COL_MARGIN  = 3;
   ROW_MARGIN  = 4;
   //charset
   CHARSET_ADDR = $B400;
@@ -355,7 +355,7 @@ Begin
   //LoadFileToAddr(Concat(DRIVE,'ORNA1.FNT'), ORNA_ADDR);
   //songLength := GetTrackLength(ADDR_MD1);
   //figure out quarter tick based on tempo
-  qtick := (peek(MPT_TEMPO_ADDOFFS + ADDR_MD1) + 1) shr 1;
+  qtick := (peek(MPT_TEMPO_ADDOFFS + ADDR_MD1) + 1) ;
   //halftick shr 1, quartertick shr 2
 
 
@@ -418,14 +418,16 @@ Begin
 
 
  
-  
+  Inc(vbldx2);
   If vbldx2 = qtick Then
     Begin
       //DANCER
-      doofs := peek($d20a) And 2;
-      //Inc(doofs);
-    // doofs := doofs mod 3;
-      dncr_pos := scrBase + 827 + doofs*2;
+      
+      //doofs := peek($d20a) And 5;
+      Inc(doofs);
+      Inc(doofs);
+      doofs := doofs mod 5;
+      dncr_pos := scrBase + 828 + doofs;
       //bottom of the scren
       //dncr_frm := dncr_frm + doofs;
       dncr_frm := dncr_frm Mod 7;
@@ -447,9 +449,7 @@ Begin
   //aniamte PMG bars here
   Inc(vbldx);
   If vbldx = qtick shl 2 Then
-    Begin
-     Inc(vbldx2);
-
+    Begin     
       Poke(704, Peek(704) - 2);
       Poke(705, Peek(705) - 2);
       Poke(706, Peek(706) - 2);
