@@ -1,4 +1,4 @@
 ;MD1 player
 ADDR_PLAYER	MD1PLAY
 CHARSET_ADDR rcdata 'font.fnt'
-ORNA_ADDR rcdata 'orna1.fnt'
+ORNA_ADDR rcdata 'dancery.fnt'
