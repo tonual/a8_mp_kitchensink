@@ -6,9 +6,7 @@ echo "> Creating .atr"
 
 ./mkatr dpkyvol1.atr -b +ph bwdos/xbw130.dos +p bwdos/startup.bat -s 524288 output/mptb.xex ../song/1-channel-digi/VOL1/* > /dev/null 2>&1 
 ./mkatr dpkyvol2.atr -b +ph bwdos/xbw130.dos +p bwdos/startup.bat -s 524288 output/mptb.xex ../song/1-channel-digi/VOL2/* > /dev/null 2>&1
-
-
-
 #
-
 echo "> Done!"
+
+open -a "Atari800MacX" --args ~/Documents/repos/a8_mp_kitchensink/mpt_samples_worklfow/pas/dpkyvol1.atr
