@@ -1,0 +1,9 @@
+;MD1 player
+ADDR_PLAYER	MD1PLAY
+
+#resources
+ADDR_MD1	MD1	'TNL4.MD1'
+ADDR_SAMPLES	RCDATA	'TNL4.D15'
+
+ORNA_ADDR rcdata 'dancery.fnt'
+ORNA_ADDR2 rcdata 'dancer2.fnt'
